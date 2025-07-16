@@ -47,6 +47,7 @@ instrument:
           0, 0, 0, 0,
           0, 0, 0, 0
         ]
+    tuning: 1.0
         
   high_sample:
     sample: ~
