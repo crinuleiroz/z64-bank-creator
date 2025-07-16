@@ -1,10 +1,14 @@
 # z64-bank-creator
+![Preview](https://i.ibb.co/k2RP1PCv/9c054ba40615c446d601508f241a260b.png)
+
 Features:
 - Create and modify YAML preset files for instruments, drums, sound effects, samples, and envelopes
 - Select instrument, drum, or sound effect presets
 - Export binary instrument bank data
 
 TODO:
+- [x] User selected output folder
+- [x] User selected presets folder
 - [ ] Add structure YAML preset creation
 - [ ] Add structure YAML preset exporting
 - [ ] Add structure YAML preset deletion
