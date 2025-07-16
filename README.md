@@ -9,6 +9,7 @@ Features:
 TODO:
 - [x] User selected output folder
 - [x] User selected presets folder
+- [x] Compile data into binary bank
 - [ ] Add structure YAML preset creation
 - [ ] Add structure YAML preset exporting
 - [ ] Add structure YAML preset deletion
