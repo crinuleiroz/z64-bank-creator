@@ -1,4 +1,4 @@
-# z64-bank-creator
+# Soon™
 ![Preview](https://i.ibb.co/k2RP1PCv/9c054ba40615c446d601508f241a260b.png)
 
 Features:
