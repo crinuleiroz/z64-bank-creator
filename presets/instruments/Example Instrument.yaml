@@ -1,0 +1,53 @@
+instrument:
+  name: "Example Instrument"
+  is_relocated: False
+  key_region_low: 0
+  key_region_high: 127
+  decay_index: 245
+
+  envelope:
+    name: "General Use Envelope"
+    array: [ 2, 32700, 1, 32700, 32700, 29430, HANG, 0 ]
+
+  low_sample:
+    sample: ~
+    tuning: 0.0
+
+  prim_sample:
+    sample:
+      name: "Example Sample"
+      unk_0: 0
+      codec: ADPCM
+      medium: RAM
+      is_cached: True
+      is_relocated: False
+      size: 64
+      vrom_address: 0x20000427
+      vadpcm_loop:
+        loop_start: 0
+        loop_end: 16
+        loop_count: INDEFINITE
+        num_samples: 24
+        predictors: [
+          0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 0, 0, 0
+        ]
+      vadpcm_book:
+        order: 2
+        num_predictors: 2
+        predictors: [
+          0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 0, 0, 0
+        ]
+        
+  high_sample:
+    sample: ~
+    tuning: 0.0
