@@ -1,0 +1,38 @@
+effect:
+  name: "Example"
+
+  effect_sample:
+    sample:
+      name: "Example Sample"
+      unk_0: 0
+      codec: ADPCM
+      medium: RAM
+      is_cached: True
+      is_relocated: False
+      size: 64
+      vrom_address: 0x20000427
+      vadpcm_loop:
+        loop_start: 0
+        loop_end: 16
+        loop_count: INDEFINITE
+        num_samples: 32
+        predictors: [
+          0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 0, 0, 0
+        ]
+      vadpcm_book:
+        order: 2
+        num_predictors: 2
+        predictors: [
+          0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 0, 0, 0
+        ]
+    tuning: 1.0
