@@ -10,13 +10,16 @@ TODO:
 - [x] User selected output folder
 - [x] User selected presets folder
 - [x] Compile data into binary bank
-- [ ] Add structure YAML preset creation
-- [ ] Add structure YAML preset exporting
-- [ ] Add structure YAML preset deletion
-- [ ] Add instrument bank YAML preset handling
-- [ ] Add instrument bank YAML preset exporting
-- [ ] Add instrument bank YAML preset deletion
-- [ ] Add Ocarina of Time YAML preset files
-- [ ] Add Majora's Mask YAML preset files
+- [ ] Add built-in sample presets
+- [x] Add built-in envelope presets
+- [ ] Add built-in instrument presets
+- [ ] Add built-in drum prests
+- [ ] Add built-in effect presets
+- [ ] Add user-defined structure preset creation
+- [ ] Add user-defined structure preset exporting
+- [ ] Add user-defined preset deletion
+- [ ] Add user-defined instrument bank preset handling
+- [ ] Add user-defined instrument bank preset exporting
+- [ ] Add user-defined instrument bank preset deletion
 - [ ] Add game handling for Ocarina of Time and Majora's Mask sample addresses
-- [ ] Add preset copying/create preset from template
+- [ ] Add creating a user-defined preset from a built-in preset
