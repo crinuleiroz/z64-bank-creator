@@ -15,6 +15,7 @@ TODO:
 - [ ] Add built-in instrument presets
 - [ ] Add built-in drum prests
 - [ ] Add built-in effect presets
+- [ ] Add built-in instrument bank presets
 - [ ] Add user-defined structure preset creation
 - [ ] Add user-defined structure preset exporting
 - [ ] Add user-defined preset deletion
