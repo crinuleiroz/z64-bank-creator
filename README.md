@@ -22,5 +22,5 @@ TODO:
 - [ ] Add user-defined instrument bank preset handling
 - [ ] Add user-defined instrument bank preset exporting
 - [ ] Add user-defined instrument bank preset deletion
-- [ ] Add game handling for Ocarina of Time and Majora's Mask sample addresses
+- [x] Add game handling for Ocarina of Time and Majora's Mask sample addresses
 - [ ] Add creating a user-defined preset from a built-in preset
