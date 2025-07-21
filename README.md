@@ -12,7 +12,7 @@ TODO:
 - [x] Compile data into binary bank
 - [ ] Add built-in sample presets
 - [x] Add built-in envelope presets
-- [ ] Add built-in instrument presets
+- [ ] Add built-in instrument presets (MM Done)
 - [ ] Add built-in drum prests
 - [ ] Add built-in effect presets
 - [ ] Add built-in instrument bank presets
