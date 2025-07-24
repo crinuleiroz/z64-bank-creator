@@ -1,11 +1,14 @@
+# App/Common/Structs.py
+
 from dataclasses import dataclass, field
 from typing import Optional, Union, List
+import uuid
 
 from App.Common.Enums import AudioSampleCodec, AudioStorageMedium, AudioSampleLoopCount, EnvelopeOpcode
 
 
 #region Structures
-@dataclass
+@dataclass(eq=False, unsafe_hash=False)
 class VadpcmLoop:
     offset: int = field(init=False, default=0)
     loop_start: int
@@ -24,7 +27,7 @@ class VadpcmLoop:
         ))
 
 
-@dataclass
+@dataclass(eq=False, unsafe_hash=False)
 class VadpcmBook:
     offset: int = field(init=False, default=0)
     order: int
@@ -35,7 +38,7 @@ class VadpcmBook:
         return hash((self.order, self.num_predictors, tuple(self.predictors)))
 
 
-@dataclass
+@dataclass(eq=False, unsafe_hash=False)
 class Sample:
     offset: int = field(init=False, default=0)
     name: str
@@ -48,6 +51,7 @@ class Sample:
     vrom_address: Union[str, int]
     vadpcm_loop: VadpcmLoop
     vadpcm_book: VadpcmBook
+    _unique_id: uuid.UUID = field(default_factory=uuid.uuid4, repr=False, compare=False)
 
     def get_hash(self) -> int:
         return hash((
@@ -62,8 +66,16 @@ class Sample:
             self.vadpcm_book.get_hash()
         ))
 
+    def __eq__(self, other):
+        if isinstance(other, Sample):
+            return self is other
+        return False
 
-@dataclass
+    def __hash__(self):
+        return id(self)
+
+
+@dataclass(eq=False, unsafe_hash=False)
 class TunedSample:
     sample: Optional[Sample]
     tuning: float
@@ -75,17 +87,26 @@ class TunedSample:
         ))
 
 
-@dataclass
+@dataclass(eq=False, unsafe_hash=False)
 class Envelope:
     offset: int = field(init=False, default=0)
     name: str
     array: List[Union[int, EnvelopeOpcode]]
+    _unique_id: uuid.UUID = field(default_factory=uuid.uuid4, repr=False, compare=False)
 
     def get_hash(self) -> int:
         return hash((tuple(self.array)))
 
+    def __eq__(self, other):
+        if isinstance(other, Envelope):
+            return self is other
+        return False
 
-@dataclass
+    def __hash__(self):
+        return id(self)
+
+
+@dataclass(eq=False, unsafe_hash=False)
 class Instrument:
     offset: int = field(init=False, default=0)
     name: str
@@ -97,6 +118,7 @@ class Instrument:
     low_sample: Optional[TunedSample] = None
     prim_sample: Optional[TunedSample] = None
     high_sample: Optional[TunedSample] = None
+    _unique_id: uuid.UUID = field(default_factory=uuid.uuid4, repr=False, compare=False)
 
     def get_hash(self) -> int:
         return hash((
@@ -110,8 +132,16 @@ class Instrument:
             self.high_sample.get_hash() if self.high_sample else None
         ))
 
+    def __eq__(self, other):
+        if isinstance(other, Instrument):
+            return self is other
+        return False
 
-@dataclass
+    def __hash__(self):
+        return id(self)
+
+
+@dataclass(eq=False, unsafe_hash=False)
 class Drum:
     offset: int = field(init=False, default=0)
     name: str
@@ -120,6 +150,7 @@ class Drum:
     is_relocated: bool
     drum_sample: TunedSample
     envelope: Envelope
+    _unique_id: uuid.UUID = field(default_factory=uuid.uuid4, repr=False, compare=False)
 
     def get_hash(self) -> int:
         return hash((
@@ -130,19 +161,54 @@ class Drum:
             self.envelope.get_hash()
         ))
 
+    def __eq__(self, other):
+        if isinstance(other, Drum):
+            return self is other
+        return False
 
-@dataclass
+    def __hash__(self):
+        return id(self)
+
+
+@dataclass(eq=False, unsafe_hash=False)
 class Effect:
     offset: int = field(init=False, default=0)
     name: str
     effect_sample: TunedSample
+    _unique_id: uuid.UUID = field(default_factory=uuid.uuid4, repr=False, compare=False)
 
     def get_hash(self) -> int:
         return hash((self.effect_sample.get_hash()))
+
+    def __eq__(self, other):
+        if isinstance(other, Effect):
+            return self is other
+        return False
+
+    def __hash__(self):
+        return id(self)
+
+@dataclass(eq=False, unsafe_hash=False)
+class Drumkit:
+    name: str
+    drums: list[Drum] = field(default_factory=list)
+    _unique_id: uuid.UUID = field(default_factory=uuid.uuid4, repr=False, compare=False)
+
+    def get_hash(self) -> int:
+        return hash(tuple(drum.get_hash() for drum in self.drums))
+
+    def __eq__(self, other):
+        if isinstance(other, Drumkit):
+            return self is other
+        return False
+
+    def __hash__(self):
+        return id(self)
 #endregion
 
 #region Type Checking
 def isInstrument(obj): return isinstance(obj, Instrument)
+def isDrumkit(obj): return isinstance(obj, Drumkit)
 def isDrum(obj): return isinstance(obj, Drum)
 def isEffect(obj): return isinstance(obj, Effect)
 def isTunedSample(obj): return isinstance(obj, TunedSample)
