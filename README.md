@@ -10,10 +10,10 @@ TODO:
 - [x] User selected output folder
 - [x] User selected presets folder
 - [x] Compile data into binary bank
-- [ ] Add built-in sample presets
+- [ ] Add built-in sample presets (MM Done)
 - [x] Add built-in envelope presets
 - [ ] Add built-in instrument presets (MM Done)
-- [ ] Add built-in drum prests
+- [ ] Add built-in drum presets
 - [ ] Add built-in effect presets
 - [ ] Add built-in instrument bank presets
 - [ ] Add user-defined structure preset creation
