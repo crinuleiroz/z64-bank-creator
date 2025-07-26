@@ -24,6 +24,7 @@ TODO:
 - [ ] Add user-defined instrument bank preset deletion
 - [x] Add game handling for Ocarina of Time and Majora's Mask sample addresses
 - [ ] Add creating a user-defined preset from a built-in preset
+- [ ] Add things to home page
 
 ### Keyboard Shortcuts
 All of the following shortcuts are page dependent, they are not global. Follow-up key sequences (e.g. `Ctrl+K, S`) require you to input the intial sequence, release all keys, then input the follow-up sequence.
