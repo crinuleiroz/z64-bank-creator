@@ -26,7 +26,7 @@ TODO:
 - [x] Choose a builtin drumkit when creating empty bank
 - [x] Create bank from builtin bank
 - [x] Add game handling for Ocarina of Time and Majora's Mask sample addresses
-- [ ] Add creating a user-defined preset from a built-in preset
+- [x] Add creating a user-defined preset from a built-in preset
 - [ ] Add things to home page
 
 ### Keyboard Shortcuts
