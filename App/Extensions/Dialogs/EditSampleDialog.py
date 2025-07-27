@@ -7,12 +7,13 @@ from App.Extensions.Forms.SampleEditForm import MultiSampleForm, SingleSampleFor
 
 
 class EditSampleDialog(MessageBoxBase):
-    def __init__(self, preset, type, parent=None):
+    def __init__(self, preset, presetType, parent=None):
         super().__init__(parent)
         self.preset = preset
-        self.type = type
+        self.presetType = presetType
+        self.form = None
 
-        match type:
+        match presetType:
             case 'instruments':
                 self.titleLabel = SubtitleLabel('Edit samples', self)
                 self.form = MultiSampleForm(self.preset)
@@ -21,7 +22,8 @@ class EditSampleDialog(MessageBoxBase):
                 self.form = SingleSampleForm(self.preset)
 
         self.viewLayout.addWidget(self.titleLabel)
-        self.viewLayout.addWidget(self.form)
+        if self.form:
+            self.viewLayout.addWidget(self.form)
         self.yesButton.setText('Apply')
         self.widget.setMinimumWidth(540)
 

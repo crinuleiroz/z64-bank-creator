@@ -7,23 +7,25 @@ from App.Extensions.Forms.ParameterEditForm import InstrumentParameterForm, Drum
 
 
 class EditParameterDialog(MessageBoxBase):
-    def __init__(self, preset, type, parent=None):
+    def __init__(self, preset, presetType, parent=None):
         super().__init__(parent)
         self.preset = preset
-        self.type = type
+        self.presetType = presetType
+        self.form = None
 
         self.titleLabel = SubtitleLabel('Edit parameters', self)
 
-        match type:
+        match presetType:
             case 'instruments':
                 self.form = InstrumentParameterForm(self.preset)
             case 'drums':
                 self.form = DrumParameterForm(self.preset)
             case _:
-                return
+                pass
 
         self.viewLayout.addWidget(self.titleLabel)
-        self.viewLayout.addWidget(self.form)
+        if self.form:
+            self.viewLayout.addWidget(self.form)
         self.yesButton.setText('Apply')
         self.widget.setMinimumWidth(540)
 
