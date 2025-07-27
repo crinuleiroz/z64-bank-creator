@@ -38,7 +38,9 @@ class EnvelopeEditForm(QWidget):
         # Envelope
         self.envelopeCombo = ComboBox(self.envelopeGroup)
         self.envelopeCombo.setMaxVisibleItems(8)
+        self.envelopeCombo.installEventFilter(ToolTipFilter(self.envelopeCombo, showDelay=300, position=ToolTipPosition.TOP))
         self.envelopeCombo.currentIndexChanged.connect(self._updateEnvelopeTooltip)
+
         self._updateEnvelopeTooltip(self.envelopeCombo.currentIndex())
         self._populateEnvelopeCombo()
 
@@ -63,9 +65,6 @@ class EnvelopeEditForm(QWidget):
         else:
             tooltipText = 'No envelope selected or no array available.'
 
-        self.envelopeCombo.installEventFilter(
-            ToolTipFilter(self.envelopeCombo, showDelay=300, position=ToolTipPosition.TOP)
-        )
         self.envelopeCombo.setToolTip(tooltipText)
 
     def applyChanges(self):
