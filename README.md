@@ -31,11 +31,13 @@ All of the following shortcuts are page dependent, they are not global. Follow-u
 
 - `Ctrl+N`: Create new empty bank or preset
 - `Ctrl+Shift+N`: Create bank or preset from template
-- `Ctrl+E`: Edit selected preset
-- `Ctrl+E, 1`: Edit selected bank's metadata
-- `Ctrl+E, 2`: Edit selected bank's instrument list
-- `Ctrl+E, 3`: Edit selected bank's drum list
-- `Ctrl+E, 4`: Edit selected bank's effect list
+- `Ctrl+E, P`: Edit selected preset's parameters
+- `Ctrl+E, S`: Edit selected preset's sample(s)
+- `Ctrl+E, E`: Edit selected preset's envelope
+- `Ctrl+E, M`: Edit selected bank's metadata
+- `Ctrl+E, I`: Edit selected bank's instrument list
+- `Ctrl+E, D`: Edit selected bank's drum list
+- `Ctrl+E, E`: Edit selected bank's effect list
 - `Ctrl+Z`: Undo last edit
 - `Ctrl+Y`: Redo last edit
 - `Ctrl+C`: Copy selected bank or preset
