@@ -416,3 +416,125 @@ def bank_from_dict(data: dict, store) -> Audiobank:
 
     return bank
 #endregion
+
+#region Serialization
+def envelope_to_dict(obj: Envelope):
+    if obj is None:
+        return None
+
+    return {
+        'name': obj.name,
+        'array': [
+            v.name if isinstance(v, EnvelopeOpcode) else v
+            for v in obj.array
+            if isinstance(v, (int, EnvelopeOpcode))
+        ]
+    }
+
+
+def vadpcm_book_to_dict(obj: VadpcmBook):
+    if obj is None:
+        return None
+    return {
+        'order': obj.order,
+        'num_predictors': obj.num_predictors,
+        'predictors': obj.predictors
+    }
+
+
+def vadpcm_loop_to_dict(obj: VadpcmLoop):
+    if obj is None:
+        return None
+    dict = {
+        'loop_start': obj.loop_start,
+        'loop_end': obj.loop_end,
+        'loop_count': obj.loop_count.name,
+        'num_samples': obj.num_samples
+    }
+
+    if obj.predictors:
+        dict['predictors'] = obj.predictors
+
+    return dict
+
+
+def sample_to_dict(obj: Sample):
+    if obj is None:
+        return None
+
+    from App.Common.BuiltinPresetNames import BUILTIN_SAMPLE_PRESET_NAMES
+    if obj.name.upper() in BUILTIN_SAMPLE_PRESET_NAMES:
+        return BUILTIN_SAMPLE_PRESET_NAMES[obj.name.upper()]
+
+    return {
+        'sample': {
+            'name': obj.name,
+            'unk_0': obj.unk_0,
+            'codec': obj.codec.name,
+            'medium': obj.medium.name,
+            'is_cached': obj.is_cached,
+            'is_relocated': obj.is_relocated,
+            'size': obj.size,
+            'vrom_address': obj.vrom_address,
+            'vadpcm_loop': vadpcm_loop_to_dict(obj.vadpcm_loop),
+            'vadpcm_book': vadpcm_book_to_dict(obj.vadpcm_book),
+        }
+    }
+
+
+def tuned_sample_to_dict(obj: TunedSample):
+    if obj is None:
+        return None
+
+    return {
+        'sample': sample_to_dict(obj.sample),
+        'tuning': obj.tuning
+    }
+
+
+def drum_to_dict(obj: Drum):
+    return {
+        'drum': {
+            'name': obj.name,
+            'decay_index': obj.decay_index,
+            'pan': obj.pan,
+            'is_relocated': obj.is_relocated,
+            'drum_sample': tuned_sample_to_dict(obj.drum_sample),
+            'envelope': envelope_to_dict(obj.envelope)
+        }
+    }
+
+
+def instrument_to_dict(obj: Instrument):
+    return {
+        'instrument': {
+            'name': obj.name,
+            'is_relocated': obj.is_relocated,
+            'key_region_low': obj.key_region_low,
+            'key_region_high': obj.key_region_high,
+            'decay_index': obj.decay_index,
+            'envelope': envelope_to_dict(obj.envelope),
+            'low_sample': tuned_sample_to_dict(obj.low_sample),
+            'prim_sample': tuned_sample_to_dict(obj.prim_sample),
+            'high_sample': tuned_sample_to_dict(obj.high_sample)
+        }
+    }
+
+
+def serialize_to_yaml(preset, presetType):
+    match presetType:
+        case 'instruments':
+            presetDict = instrument_to_dict(preset)
+        case 'drums':
+            presetDict = drum_to_dict(preset)
+        case 'effects':
+            presetDict = tuned_sample_to_dict(preset)
+        case 'samples':
+            presetDict = sample_to_dict(preset)
+        case 'envelopes':
+            presetDict = envelope_to_dict(preset)
+        case _:
+            return None
+
+    return presetDict
+#endregion
