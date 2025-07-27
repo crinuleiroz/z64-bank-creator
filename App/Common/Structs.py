@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Optional, Union, List
 import uuid
 
+# App/Common
 from App.Common.Enums import AudioSampleCodec, AudioStorageMedium, AudioSampleLoopCount, EnvelopeOpcode
 
 
@@ -191,6 +192,7 @@ class Effect:
 @dataclass(eq=False, unsafe_hash=False)
 class Drumkit:
     name: str
+    game: str
     drums: list[Drum] = field(default_factory=list)
     _unique_id: uuid.UUID = field(default_factory=uuid.uuid4, repr=False, compare=False)
 

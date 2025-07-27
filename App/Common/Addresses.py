@@ -1,3 +1,5 @@
+# App/Common/Addresses.py
+
 AUDIO_SAMPLE_ADDRESSES: dict[str, dict[str, int]] = {
     # Shared Samples
     'OCARINA:G080'           : {'OOT': 0x000FAD40, 'MM': 0x002786B0},
@@ -54,7 +56,7 @@ AUDIO_SAMPLE_ADDRESSES: dict[str, dict[str, int]] = {
     'BANJO:A057'             : {'OOT': 0x003F0DF0, 'MM': 0x004F6280},
     'PERC:CONGA:MUTE'        : {'OOT': 0x00445900, 'MM': 0x0053B200},
     'PERC:CONGA:OPEN'        : {'OOT': 0x003D6860, 'MM': 0x004FADE0},
-    'PERC:CONGA:SLAP'        : {'OOT': 0x00447BC0, 'MM': 0x0054D4C0},
+    'PERC:CONGA:SLAP'        : {'OOT': 0x00447BC0, 'MM': 0x0053D4C0},
     'CABASA:D123'            : {'OOT': 0x003DBB00, 'MM': 0x00500080},
     'MARIMBA:D062'           : {'OOT': 0x0039FBE0, 'MM': 0x00513220},
     'MARIMBA:D074'           : {'OOT': 0x003A2280, 'MM': 0x005158C0},
@@ -104,8 +106,8 @@ AUDIO_SAMPLE_ADDRESSES: dict[str, dict[str, int]] = {
     'GORON CHILD:B071'       : {'OOT': -1,         'MM': 0x002B82E0},
     "GIANTS' VOICE:C061"     : {'OOT': -1,         'MM': 0x002BB710},
     'SLEIGHBELL:B107'        : {'OOT': -1,         'MM': 0x003EBAA0},
-    'TENOR SAX:A057'         : {'OOT': -1,         'MM': 0x003EF2C0},
-    'TENOR SAX:E064'         : {'OOT': -1,         'MM': 0x003F0780},
+    'TENOR SAXOPHONE:A057'   : {'OOT': -1,         'MM': 0x003EF2C0},
+    'TENOR SAXOPHONE:E064'   : {'OOT': -1,         'MM': 0x003F0780},
     'STEEL STR GUITAR:D074'  : {'OOT': -1,         'MM': 0x003F21D0},
     'KICK DRUM:G043'         : {'OOT': -1,         'MM': 0x0040E220},
     'SHAKER:E112'            : {'OOT': -1,         'MM': 0x0040EBE0},

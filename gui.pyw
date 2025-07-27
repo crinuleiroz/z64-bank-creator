@@ -5,10 +5,12 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 from qfluentwidgets import Theme
 
-# App Imports
+# App
+from App.MainWindow import MainWindow
+
+# App/Common
 import App.Common.Resources
 from App.Common.Config import cfg
-from App.MainWindow import MainWindow
 
 
 # Application Attributes
