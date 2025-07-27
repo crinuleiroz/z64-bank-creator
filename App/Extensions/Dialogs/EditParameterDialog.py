@@ -12,12 +12,12 @@ class EditParameterDialog(MessageBoxBase):
         self.preset = preset
         self.type = type
 
+        self.titleLabel = SubtitleLabel('Edit parameters', self)
+
         match type:
             case 'instruments':
-                self.titleLabel = SubtitleLabel('Edit instrument', self)
                 self.form = InstrumentParameterForm(self.preset)
             case 'drums':
-                self.titleLabel = SubtitleLabel('Edit drum', self)
                 self.form = DrumParameterForm(self.preset)
             case _:
                 return
