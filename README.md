@@ -22,6 +22,9 @@ TODO:
 - [ ] Add user-defined instrument bank preset handling
 - [ ] Add user-defined instrument bank preset exporting
 - [ ] Add user-defined instrument bank preset deletion
+- [x] Create empty bank
+- [x] Choose a builtin drumkit when creating empty bank
+- [x] Create bank from builtin bank
 - [x] Add game handling for Ocarina of Time and Majora's Mask sample addresses
 - [ ] Add creating a user-defined preset from a built-in preset
 - [ ] Add things to home page
