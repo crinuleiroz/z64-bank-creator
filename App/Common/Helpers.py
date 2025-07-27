@@ -181,6 +181,29 @@ def clone_preset(original, new_name: str = ''):
                 drum_sample=original.drum_sample,
                 envelope=original.envelope
             )
+        case Effect():
+            return Effect(
+                name=name,
+                effect_sample=original.effect_sample
+            )
+        case Sample():
+            return Sample(
+                name=name,
+                unk_0=original.unk_0,
+                codec=original.codec,
+                medium=original.medium,
+                is_cached=original.is_cached,
+                is_relocated=original.is_relocated,
+                size=original.size,
+                vrom_address=original.vrom_address,
+                vadpcm_loop=original.vadpcm_loop,
+                vadpcm_book=original.vadpcm_book
+            )
+        case Envelope():
+            return Envelope(
+                name=name,
+                array=original.array
+            )
         case _:
             raise TypeError(f'Unsupported preset type: {type(original).__name__}')
 

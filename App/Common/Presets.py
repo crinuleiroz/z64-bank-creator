@@ -218,7 +218,7 @@ class UserPresetStore(PresetStoreBase):
             case Sample():
                 self.samples.pop(key, None)
             case Envelope():
-                self.samples.pop(key, None)
+                self.envelopes.pop(key, None)
 
         self.file_map.pop(key, None)
 #endregion
