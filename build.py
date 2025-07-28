@@ -12,7 +12,7 @@ ROOT_DIR = Path(__file__).resolve().parent
 PRESET_PATH_BUILDER = ROOT_DIR / 'Tools' / 'generate_preset_paths.py'
 BUILTIN_HASH_BUILDER = ROOT_DIR / 'Tools' / 'generate_builtin_preset_hashes.py'
 RSRC_QRC_FILE = ROOT_DIR / 'App' / 'Resources' / 'resources.qrc'
-RSRC_PY_FILE = ROOT_DIR / 'App' / 'Resources' / 'Resources.py'
+RSRC_PY_FILE = ROOT_DIR / 'App' / 'Common' / 'Resources.py'
 
 # Compile executable
 BUILD_EXE = True
@@ -44,17 +44,17 @@ if __name__ == '__main__':
     # Compile into executable
     if BUILD_EXE:
         nuitka_cmd = [
-            'nuitka',
+            sys.executable, '-m', 'nuitka',
             '--enable-plugin=pyside6',
             '--mode=app',
-            '--follow-imports'
+            '--follow-imports',
             '--mingw64',
             f'--windows-icon-from-ico={str(ICO_FILE)}',
-            f'--file-description={repr(FILE_DESCRIPTION)}',
+            f'--file-description={FILE_DESCRIPTION}',
             f'--file-version={FILE_VERSION}',
-            f'--product-name={repr(PRODUCT_NAME)}',
+            f'--product-name={PRODUCT_NAME}',
             f'--product-version={PRODUCT_VERSION}',
-            f'--copyright={repr(LEGAL_COPYRIGHT)}',
+            f'--copyright={LEGAL_COPYRIGHT}',
             str(APP_FILE)
         ]
 

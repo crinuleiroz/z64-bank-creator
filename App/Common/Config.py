@@ -101,4 +101,4 @@ APP_VERSION = '0.1.0' # Major.Minor.Patch
 cfg = Config()
 # cfg.themeMode.value = Theme.AUTO
 cfg.themeMode.value = Theme.DARK
-qconfig.load('app/config.json', cfg)
+qconfig.load('config.json', cfg)
