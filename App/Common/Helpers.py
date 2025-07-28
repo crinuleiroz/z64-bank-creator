@@ -3,12 +3,25 @@
 from io import BytesIO
 from PIL import Image
 from copy import deepcopy
+from hashlib import sha256
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap, QPainter, QIcon, QColor
 from PySide6.QtWidgets import QApplication
 
 from qfluentwidgets import ComboBox
+
+
+#region Hashing
+def stable_hash(*parts: object, length: int = 32) -> str:
+    """
+    Generate a stable SHA-256 hash from the string representation of the input parts.
+    Optionally truncate to a fixed length.
+    """
+    joined = "|".join(str(p) for p in parts)
+    digest = sha256(joined.encode()).hexdigest()
+    return digest[:length] if length else digest
+#endregion
 
 
 #region ComboBoxes
@@ -32,7 +45,7 @@ def populate_combo_box(combo, builtin_list, user_list, target_obj=None, add_none
     combo.clear()
 
     if add_none:
-        combo.addItem("None", userData=None)
+        combo.addItem('None', userData=None)
 
     for item in builtin_list:
         combo.addItem(item.name, userData=item)
@@ -129,15 +142,17 @@ def make_dot_icon(color=QColor('#DA3C3C'), diameter=8):
 #endregion
 
 
-#region Alignment
+#region Alignment Helpers
 def align_to_16(n: int) -> int:
     return (n + 0xF) & ~0xF
+
 
 def pad_to_16(b: bytes) -> bytes:
     return b + (b'\x00' * (align_to_16(len(b)) - len(b)))
 #endregion
 
-#region Object Copying
+
+#region Object Helpers
 def clone_bank(original, new_name: str = '', game=''):
     """ Clones an audiobank while preserving original references. """
     from App.Common.Audiobank import Audiobank
@@ -154,6 +169,7 @@ def clone_bank(original, new_name: str = '', game=''):
     cloned.effects = list(original.effects)
 
     return cloned
+
 
 def clone_preset(original, new_name: str = ''):
     from App.Common.Structs import Instrument, Drum, Effect, Sample, Envelope
@@ -206,6 +222,7 @@ def clone_preset(original, new_name: str = ''):
             )
         case _:
             raise TypeError(f'Unsupported preset type: {type(original).__name__}')
+
 
 def generate_copy_name(base_name: str, existing_names: set[str]) -> str:
     if base_name not in existing_names:

@@ -1,6 +1,6 @@
 # App/Common/Enums.py
 
-from enum import IntEnum
+from enum import Enum, IntEnum
 
 
 class AudioStorageMedium(IntEnum):

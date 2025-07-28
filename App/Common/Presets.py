@@ -13,6 +13,7 @@ from App.Common.Serialization import bank_from_dict, drumkit_from_dict, instrume
 from App.Resources.Presets.PresetPaths import BANKS_PATHS, DRUMKITS_PATHS, INSTRUMENTS_PATHS, SAMPLES_PATHS, ENVELOPES_PATHS
 
 
+#region Base Class
 class PresetStoreBase:
     def __init__(self):
         self.instruments: dict[int, Instrument] = {}
@@ -88,6 +89,8 @@ class PresetStoreBase:
 
     def get_path(self, key: int):
         return self.file_map.get(key)
+#endregion
+
 
 #region Built-in Presets
 class BuiltinPresetStore(PresetStoreBase):
@@ -202,8 +205,8 @@ class UserPresetStore(PresetStoreBase):
             except Exception as e:
                 print(f"[UserPresetStore] Failed to load {root_key} from {file}: {e}")
 
-    def add_preset(self, obj):
-        self.register(obj, path=None)
+    def add_preset(self, obj, path=None):
+        self.register(obj, path)
 
     def remove_preset(self, obj):
         key = id(obj)
@@ -221,6 +224,10 @@ class UserPresetStore(PresetStoreBase):
                 self.envelopes.pop(key, None)
 
         self.file_map.pop(key, None)
+
+    def replace_preset(self, old_preset, new_preset):
+        self.remove_preset(old_preset)
+        self.add_preset(new_preset)
 #endregion
 
 

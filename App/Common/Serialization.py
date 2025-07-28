@@ -422,6 +422,11 @@ def envelope_to_dict(obj: Envelope):
     if obj is None:
         return None
 
+    from App.Resources.Presets.BuiltinPresetHashes import BUILTIN_ENVELOPE_PRESET_HASHES
+    eHash = obj.get_hash()
+    if eHash in BUILTIN_ENVELOPE_PRESET_HASHES:
+        return BUILTIN_ENVELOPE_PRESET_HASHES[eHash]
+
     return {
         'name': obj.name,
         'array': [
@@ -462,9 +467,10 @@ def sample_to_dict(obj: Sample):
     if obj is None:
         return None
 
-    from App.Common.BuiltinPresetNames import BUILTIN_SAMPLE_PRESET_NAMES
-    if obj.name.upper() in BUILTIN_SAMPLE_PRESET_NAMES:
-        return BUILTIN_SAMPLE_PRESET_NAMES[obj.name.upper()]
+    from App.Resources.Presets.BuiltinPresetHashes import BUILTIN_SAMPLE_PRESET_HASHES
+    sHash = obj.get_hash()
+    if sHash in BUILTIN_SAMPLE_PRESET_HASHES:
+        return BUILTIN_SAMPLE_PRESET_HASHES[sHash]
 
     return {
         'sample': {
@@ -491,6 +497,17 @@ def tuned_sample_to_dict(obj: TunedSample):
         'tuning': obj.tuning
     }
 
+
+def effect_to_dict(obj: Effect):
+    if obj is None:
+        return None
+
+    return {
+        'effect': {
+            'name': obj.name,
+            'effect_sample': tuned_sample_to_dict(obj.effect_sample)
+        }
+    }
 
 def drum_to_dict(obj: Drum):
     return {
@@ -521,20 +538,90 @@ def instrument_to_dict(obj: Instrument):
     }
 
 
+def bank_to_dict(obj: Audiobank):
+    dict = {
+        'bank': {
+            'name': obj.name,
+            'game': obj.game,
+            'table_entry': {
+                'storage_medium': obj.tableEntry.storageMedium.name,
+                'cache_load_type': obj.tableEntry.cacheLoadType.name,
+                'sample_bank_id_1': obj.tableEntry.sampleBankId_1.name,
+                'sample_bank_id_2': obj.tableEntry.sampleBankId_2.name,
+                'num_instruments': obj.tableEntry.numInstruments,
+                'num_drums': obj.tableEntry.numDrums,
+                'num_effects': obj.tableEntry.numEffects
+            }
+        }
+    }
+
+    from App.Resources.Presets.BuiltinPresetHashes import BUILTIN_INSTRUMENT_PRESET_HASHES, BUILTIN_DRUM_PRESET_HASHES, BUILTIN_EFFECT_PRESET_HASHES
+    if obj.tableEntry.numInstruments > 0:
+        inst_list = []
+        for inst in obj.instruments:
+            if inst is None:
+                inst_list.append(None)
+                continue
+
+            iHash = inst.get_hash()
+            if iHash in BUILTIN_INSTRUMENT_PRESET_HASHES:
+                inst_list.append(BUILTIN_INSTRUMENT_PRESET_HASHES[iHash])
+                continue
+
+            inst_list.append(instrument_to_dict(inst))
+
+        dict['bank']['instruments'] = inst_list
+
+    if obj.tableEntry.numDrums > 0:
+        drum_list = []
+        for drum in obj.drums:
+            if drum is None:
+                drum_list.append(None)
+                continue
+
+            # Not implemented
+            # dHash = drum.get_hash()
+            # if dHash in BUILTIN_DRUM_PRESET_HASHES:
+            #     drum_list.append(BUILTIN_DRUM_PRESET_HASHES[dHash])
+            #     continue
+
+            drum_list.append(drum_to_dict(drum))
+
+        dict['bank']['drums'] = drum_list
+
+    if obj.tableEntry.numEffects > 0:
+        effect_list = []
+        for effect in obj.effects:
+            if effect is None:
+                effect_list.append(None)
+
+            # Not implemented
+            # eHash = effect.get_hash()
+            # if eHash in BUILTIN_EFFECT_PRESET_HASHES:
+            #     effect_list.append(BUILTIN_EFFECT_PRESET_HASHES[eHash])
+            #     continue
+
+            effect_list.append(effect_to_dict(effect))
+
+        dict['bank']['effects'] = effect_list
+
+    return dict
+
+
 def serialize_to_yaml(preset, presetType):
     match presetType:
         case 'instruments':
-            presetDict = instrument_to_dict(preset)
+            return instrument_to_dict(preset)
         case 'drums':
-            presetDict = drum_to_dict(preset)
+            return drum_to_dict(preset)
         case 'effects':
-            presetDict = tuned_sample_to_dict(preset)
+            return effect_to_dict(preset)
         case 'samples':
-            presetDict = sample_to_dict(preset)
+            return sample_to_dict(preset)
         case 'envelopes':
-            presetDict = envelope_to_dict(preset)
+            return envelope_to_dict(preset)
+        case 'banks':
+            return bank_to_dict(preset)
         case _:
             return None
-
-    return presetDict
 #endregion

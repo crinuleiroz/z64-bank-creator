@@ -22,6 +22,7 @@ class Pointer:
     offset: int = 0
 
 
+#region Table Entry
 @dataclass
 class TableEntry:
     storageMedium: AudioStorageMedium = AudioStorageMedium.CART
@@ -43,6 +44,7 @@ class TableEntry:
             self.numDrums,
             self.numEffects
         )
+#endregion
 
 
 class Audiobank:
@@ -110,7 +112,6 @@ class Audiobank:
         self._add_to_registry(effect, effect.get_hash(), self.effectRegistry)
         if effect.effect_sample:
             self._register_sample_data(effect.effect_sample.sample)
-    #endregion
 
     def reassign_registry_refs(self):
         # Update instrument references
@@ -139,6 +140,7 @@ class Audiobank:
             if effect and effect.effect_sample and effect.effect_sample.sample:
                 sample = self.sampleRegistry[effect.effect_sample.sample.get_hash()]
                 effect.effect_sample.sample = sample
+    #endregion
 
     #region Offset Assignment
     def assign_offsets(self, allocator: MemAllocator):
@@ -352,6 +354,7 @@ class Audiobank:
     #endregion
 
 
+#region Helpers
 def resolve_sample_address(addr, game):
     result = addr
     if isinstance(addr, str):
@@ -361,3 +364,4 @@ def resolve_sample_address(addr, game):
         else:
             result = 0
     return result
+#endregion
