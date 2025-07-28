@@ -20,7 +20,7 @@ TODO:
 - [x] Add user-defined structure preset exporting
 - [ ] Add user-defined preset deletion
 - [ ] Add user-defined instrument bank preset handling
-- [ ] Add user-defined instrument bank preset exporting
+- [x] Add user-defined instrument bank preset exporting
 - [ ] Add user-defined instrument bank preset deletion
 - [x] Create empty bank
 - [x] Choose a builtin drumkit when creating empty bank
