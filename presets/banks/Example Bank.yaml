@@ -1,0 +1,24 @@
+bank:
+  name: "Example Bank"
+  game: MM
+  
+  # The table entry gets compiled into the ".bankmeta" file
+  # This contains the bank's important metadata
+  table_entry:
+    storage_medium: CART
+    cache_load_type: TEMPORARY
+    sample_bank_id_1: BANK_1
+    sample_bank_id_2: NO_BANK
+    num_instruments: 1
+    num_drums: 1
+    num_effects: 1
+    
+  # Below are the lists of structures in the bank
+  instruments:
+  - ~ # See "Example Instrument.yaml" for the instrument YAML
+  
+  drums:
+  - ~ # See "Example Drum.yaml" for the drum YAML
+  
+  effects:
+  - ~ # See "Example Effect.yaml" for the effect YAML
