@@ -9,7 +9,7 @@ from qfluentwidgets import TitleLabel, CommandBar, ListWidget, ScrollArea
 from App.Extensions.Widgets.Frame import Frame
 
 # App/ViewModels
-from App.ViewModels.Pages import BanksViewModel
+from App.ViewModels.Pages.BanksViewModel import BanksViewModel
 
 
 class BanksPage(QWidget):

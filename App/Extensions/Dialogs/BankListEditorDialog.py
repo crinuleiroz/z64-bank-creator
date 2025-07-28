@@ -160,4 +160,3 @@ class BankListEditorDialog(MessageBoxBase):
 
     def get_selection(self):
         return [cb.currentData() for i, cb in enumerate(self.comboBoxes) if i < self.count]
-

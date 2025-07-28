@@ -16,7 +16,7 @@ from App.Common.Config import cfg
 from App.Extensions.Widgets.BackgroundImageCard import BackgroundImageCard
 
 # App/ViewModels
-from App.ViewModels.Pages import SettingsViewModel
+from App.ViewModels.Pages.SettingsViewModel import SettingsViewModel
 
 
 class SettingsPage(QWidget):

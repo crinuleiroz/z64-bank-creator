@@ -14,11 +14,15 @@ BUILTIN_HASH_BUILDER = ROOT_DIR / 'Tools' / 'generate_builtin_preset_hashes.py'
 RSRC_QRC_FILE = ROOT_DIR / 'App' / 'Resources' / 'resources.qrc'
 RSRC_PY_FILE = ROOT_DIR / 'App' / 'Resources' / 'Resources.py'
 
-# Build executable
+# Compile executable
 BUILD_EXE = True
-UPX_DIR = ROOT_DIR / 'Tools' / 'Compile' / 'upx-5.0.2-win64'
-VERSION_FILE = ROOT_DIR / 'Tools' / 'Compile' / 'version.rc'
+VERSION_FILE = ROOT_DIR / 'Tools' / 'Compile' / 'version.res'
 ICO_FILE = ROOT_DIR / 'App' / 'Resources' / 'Icons' / 'clef_icon.ico'
+FILE_DESCRIPTION = 'Zelda64 Bank Creator'
+FILE_VERSION = '0.1.0.0'
+PRODUCT_NAME = 'Zelda64 Bank Creator'
+PRODUCT_VERSION = '0.1.0.0'
+LEGAL_COPYRIGHT = 'Copyright © 2025 Crinuleiroz'
 APP_FILE = ROOT_DIR / 'gui.pyw'
 
 
@@ -37,23 +41,21 @@ if __name__ == '__main__':
     run(["pyside6-rcc", str(RSRC_QRC_FILE), "-o", str(RSRC_PY_FILE)], 'Compiling Qt resource file')
     run([sys.executable, str(BUILTIN_HASH_BUILDER)], 'Generating BuiltinPresetHashes.py')
 
+    # Compile into executable
     if BUILD_EXE:
-        if not UPX_DIR.exists():
-            print(f'ERROR: UPX directory not found at: {UPX_DIR}')
-            sys.exit(1)
-
-        # Build executable
-        pyinstaller_cmd = [
-            'pyinstaller',
-            '--noconfirm',
-            '--onefile',
-            '--windowed',
-            '--icon', str(ICO_FILE),
-            '--upx-dir', str(UPX_DIR),
-            '--clean',
-            '--optimize', '2',
-            '--version-file', str(VERSION_FILE),
+        nuitka_cmd = [
+            'nuitka',
+            '--enable-plugin=pyside6',
+            '--mode=app',
+            '--follow-imports'
+            '--mingw64',
+            f'--windows-icon-from-ico={str(ICO_FILE)}',
+            f'--file-description={repr(FILE_DESCRIPTION)}',
+            f'--file-version={FILE_VERSION}',
+            f'--product-name={repr(PRODUCT_NAME)}',
+            f'--product-version={PRODUCT_VERSION}',
+            f'--copyright={repr(LEGAL_COPYRIGHT)}',
             str(APP_FILE)
         ]
 
-        run(pyinstaller_cmd, 'Building executable with PyInstaller')
+        run(nuitka_cmd, 'Compiling executable with nuitka')

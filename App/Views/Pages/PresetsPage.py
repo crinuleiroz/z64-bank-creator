@@ -9,7 +9,7 @@ from qfluentwidgets import TitleLabel, CommandBar, ListWidget, ScrollArea, Segme
 from App.Extensions.Widgets.Frame import Frame
 
 # App/ViewModels
-from App.ViewModels.Pages import PresetsViewModel
+from App.ViewModels.Pages.PresetsViewModel import PresetsViewModel
 
 
 class PresetsPage(QWidget):
