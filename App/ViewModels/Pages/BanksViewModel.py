@@ -198,7 +198,9 @@ class BanksViewModel(object):
         hasSingleSelection: bool = selectedCount == 1
 
         self.editAction.setEnabled(hasSingleSelection)
-        self.exportAction.setEnabled(hasSingleSelection)
+        self.exportAction.setEnabled(hasSelection)
+        if self.exportAction.isEnabled():
+            self.savePresetAction.setEnabled(hasSingleSelection)
         self.deleteAction.setEnabled(hasSelection)
 
         if hasSingleSelection:

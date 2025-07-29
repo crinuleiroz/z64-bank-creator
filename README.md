@@ -49,7 +49,7 @@ A python-based Zelda64 instrument bank creator, editor, and compiler with a flue
 - [x] Implement redoing changes made to user-defined instrument bank presets
 - [x] Implement undoing deletion of user-defined instrument bank presets
 - [x] Implement redoing deletion of user-defined instrument bank presets
-- [ ] Implament undoing creation of user-defined drumkit presets
+- [ ] Implement undoing creation of user-defined drumkit presets
 - [ ] Implement redoing creation of user-defined drumkit presets
 - [ ] Implement undoing changes made to user-defined drumkit presets
 - [ ] Implement redoing changes made to user-defined drumkit presets
