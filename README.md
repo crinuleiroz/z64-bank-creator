@@ -6,45 +6,93 @@ Features:
 - Select instrument, drum, or sound effect presets
 - Export binary instrument bank data
 
-TODO:
-- [x] User selected output folder
-- [x] User selected presets folder
-- [x] Compile data into binary bank
-- [ ] Add built-in sample presets (MM Done)
-- [x] Add built-in envelope presets
-- [ ] Add built-in instrument presets (MM Done)
-- [ ] Add built-in drum presets
-- [ ] Add built-in effect presets
-- [ ] Add built-in instrument bank presets
-- [x] Add user-defined structure preset creation
-- [x] Add user-defined structure preset exporting
-- [ ] Add user-defined preset deletion
-- [ ] Add user-defined instrument bank preset handling
-- [x] Add user-defined instrument bank preset exporting
-- [ ] Add user-defined instrument bank preset deletion
-- [x] Create empty bank
-- [x] Choose a builtin drumkit when creating empty bank
-- [x] Create bank from builtin bank
-- [x] Add game handling for Ocarina of Time and Majora's Mask sample addresses
-- [x] Add creating a user-defined preset from a built-in preset
-- [ ] Add things to home page
+## TODO
+> [!IMPORTANT]
+> This is not an exhaustive list of planned features and functionality of the app. This TODO list is a way to keep track of what has and hasn't been implemented to release version 1.0.0 of the app.
+### Structure Functionality
+- [x] Load user-defined structure presets
+- [x] Create empty user-defined structure presets
+- [x] Create user-defined structure presets from built-in structure
+- [x] Export user-defined structure presets
+- [x] Delete user-defined structure presets
+- [ ] Modify user-defined structure preset parameters (All but samples and envelopes)
+- [x] Modify user-defined structure preset sample assignment
+- [x] Modify user-defined structure preset envelope assignment
+### Instrument Bank Functionality
+- [ ] Load user-defined instrument bank presets
+- [x] Create empty user-defined instrument bank presets
+- [x] Drumkit selection during empty user-defined instrument bank preset creation
+- [x] Create instrument bank presets from built-in instrument bank
+- [ ] Export user-defined instrument bank presets
+- [ ] Delete user-defined instrument bank presets
+- [x] Modify user-defined instrument bank preset table entry data
+- [x] Modify user-defined instrument bank preset structure assignment
+- [x] Compile user-defined instrument bank presets to binary
+### Drumkit Functionality
+- [ ] Load user-defined drumkit presets
+- [ ] Create empty user-defined drumkit presets
+- [ ] Create user-defined drumkit presets from built-in drumkit
+- [ ] Export user-defined drumkit presets
+- [ ] Delete user-defined drumkit presets
+- [ ] Modify user-defined drumkit preset drum assignment
+### App Functionality
+- [x] Change default output folder location
+- [x] Change default preset folder location
+- [x] Implement keyboard shortcuts
+- [x] Implement copying user-defined presets
+- [x] Implement pasting user-defined presets
+- [x] implement undoing pasting of user-defined presets
+- [x] Implement undoing creation of user-defined structure presets
+- [x] Implement redoing creation of user-defined structure presets
+- [x] Implement undoing changes made to user-defined structure presets
+- [x] Implement redoing changes made to user-defined structure presets
+- [x] Implement undoing deletion of user-defined structure presets
+- [x] Implement redoing deletion of user-defined structure presets
+- [x] Implement undoing creation of user-defined instrument bank presets
+- [x] Implement redoing creation of user-defined instrument bank presets
+- [x] Implement undoing changes made to user-defined instrument bank presets
+- [x] Implement redoing changes made to user-defined instrument bank presets
+- [x] Implement undoing deletion of user-defined instrument bank presets
+- [x] Implement redoing deletion of user-defined instrument bank presets
+- [ ] Implament undoing creation of user-defined drumkit presets
+- [ ] Implement redoing creation of user-defined drumkit presets
+- [ ] Implement undoing changes made to user-defined drumkit presets
+- [ ] Implement redoing changes made to user-defined drumkit presets
+- [ ] Implement undoing deletion of user-defined drumkit presets
+- [ ] Implement redoing deletion of user-defined drumkit presets
+- [ ] Add home page . . .
+- [x] Add banks page where users can create, modify, export, delete, and compile instrument bank presets
+- [x] Add presets page where users can create, modify, export, and delete structure presets
+- [ ] Add drumkits page where users can create, modify, export, and delete drumkit presets
+### Internal App Data
+- [ ] Implement built-in instrument presets (Majora's Mask done)
+- [ ] Implement built-in drum presets
+- [ ] Implement built-in effect presets (Unlikely to ever be done)
+- [ ] Implement built-in sample presets (Majora's Mask done)
+- [x] Implement built-in envelope presets
+- [ ] Implement built-in instrument bank presets
+- [ ] Implement built-in drumkit presets
+- [x] Add handling for built-in sample preset VROM addresses
 
 ### Keyboard Shortcuts
-All of the following shortcuts are page dependent, they are not global. Follow-up key sequences (e.g. `Ctrl+K, S`) require you to input the intial sequence, release all keys, then input the follow-up sequence.
+> [!IMPORTANT]
+> Follow-up key sequence combos (`Ctrl+<Key>, <Key>`) require you to input the initial sequence, release all keys, then input the follow up key or sequence.
 
-- `Ctrl+N`: Create new empty bank or preset
-- `Ctrl+Shift+N`: Create bank or preset from template
-- `Ctrl+E, P`: Edit selected preset's parameters
-- `Ctrl+E, S`: Edit selected preset's sample(s)
-- `Ctrl+E, E`: Edit selected preset's envelope
-- `Ctrl+E, M`: Edit selected bank's metadata
-- `Ctrl+E, I`: Edit selected bank's instrument list
-- `Ctrl+E, D`: Edit selected bank's drum list
-- `Ctrl+E, E`: Edit selected bank's effect list
-- `Ctrl+Z`: Undo last edit
-- `Ctrl+Y`: Redo last edit
-- `Ctrl+C`: Copy selected bank or preset
-- `Ctrl+V`: Paste selected bank or preset
-- `Ctrl+S`: Export selected bank or preset to YAML
-- `Ctrl+B`: Compile selected bank
-- `Del`: Delete selected bank or preset
+| Key Sequence | Description |
+| --- | --- |
+| `Ctrl+N` | Opens the dialog to create an empty user-defined preset |
+| `Ctrl+Shift+N` | Opens the dialog to create a user-defined preset from a built-in preset |
+| `Ctrl+E, P` | Opens the dialog to edit a user-defined structure preset's parameters |
+| `Ctrl+E, S` | Opens the dialog to edit a user-defined structure preset's sample assignment |
+| `Ctrl+E, E` | Opens the dialog to edit a user-defined structure preset's envelope assignment |
+| `Ctrl+E, M` | Edit selected bank's metadata |
+| `Ctrl+E, I` | Edit selected bank's instrument list |
+| `Ctrl+E, D` | Edit selected bank's drum list |
+| `Ctrl+E, E` | Edit selected bank's effect list |
+| `Ctrl+Z` | Undo the last edit made to a user-defined preset (page dependent) |
+| `Ctrl+Y` | Redo the last edit made to a user-defined preset (page dependent) |
+| `Ctrl+C` | Copy the selected user-defined preset(s) |
+| `Ctrl+V` | Paste the selected user-defined preset(s) |
+| `Ctrl+S` | Open the dialog to save the user-defined preset to disk as a YAML file |
+| `Ctrl+B` | Compile the selected instrument bank preset(s) to binary |
+| `Del` | Delete the selected user-defined preset(s) from disk |
