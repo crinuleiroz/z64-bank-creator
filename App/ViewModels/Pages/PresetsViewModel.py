@@ -15,12 +15,12 @@ from qfluentwidgets import FluentIcon as FIF
 # App/Common
 from App.Common.Config import cfg
 from App.Common.Presets import builtinPresetStore, userPresetStore, presetRegistry
-from App.Common.Helpers import make_dot_icon, apply_group_box_style, generate_copy_name, clone_preset
+from App.Common.Helpers import make_dot_icon, apply_group_box_style, generate_copy_name, clone_struct
 from App.Common.Serialization import serialize_to_yaml
 from App.Common.Structs import Instrument, Drum, Effect, TunedSample, Sample, Envelope
 
 # App/Extensions
-from App.Extensions.Components.MSFluentIcons import MSFluentIcon as FICO
+from App.Resources.Icons.MSFluentIcons import MSFluentIcon as FICO
 from App.Extensions.Components.PresetCommands import CreatePresetCommand, EditPresetCommand, PastePresetCommand, DeletePresetCommand
 from App.Extensions.Dialogs.CreatePresetDialog import CreatePresetDialog
 from App.Extensions.Dialogs.EditParameterDialog import EditParameterDialog
@@ -264,7 +264,7 @@ class PresetsViewModel(object):
 
     #region Preset Handling
     def _onAddPreset(self, formType='empty', boolean=False):
-        dialog = CreatePresetDialog(formType, self.page)
+        dialog = CreatePresetDialog('struct', formType, self.page)
 
         if dialog.exec():
             if not dialog.form.applyChanges():
@@ -337,10 +337,10 @@ class PresetsViewModel(object):
 
         # Switch tabs before pasting, that way the names are correct
         # And the user knows where their item was pasted
-        expectedTab = self.copiedPresetType + 'Interface'
+        self.currentPresetType = self.copiedPresetType
+        expectedTab = self.currentPresetType + 'Interface'
         if self.pivot.currentRouteKey() != expectedTab:
             self.pivot.setCurrentItem(expectedTab)
-
 
         existingNames = {
             self.listView.item(i).text()
@@ -350,7 +350,7 @@ class PresetsViewModel(object):
         pastedPresets = []
         for presetCopy in self.copiedPresets:
             newName = generate_copy_name(presetCopy.name, existingNames)
-            newPreset = clone_preset(
+            newPreset = clone_struct(
                 original=presetCopy,
                 new_name=newName
             )
@@ -440,8 +440,8 @@ class PresetsViewModel(object):
         if not preset:
             return
 
-        from App.Common.Helpers import clone_preset
-        oldPreset = clone_preset(preset)
+        from App.Common.Helpers import clone_struct
+        oldPreset = clone_struct(preset)
 
         dialog = dialogClass(preset, *args, self.page)
         if dialog.exec():

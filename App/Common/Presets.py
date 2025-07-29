@@ -41,6 +41,8 @@ class PresetStoreBase:
                 self.samples[key] = obj
             case Envelope():
                 self.envelopes[key] = obj
+            case Drumkit():
+                self.drumkits[key] = obj
             case Audiobank():
                 self.banks[obj.name] = obj
 
@@ -222,6 +224,8 @@ class UserPresetStore(PresetStoreBase):
                 self.samples.pop(key, None)
             case Envelope():
                 self.envelopes.pop(key, None)
+            case Audiobank():
+                self.banks.pop(key, None)
 
         self.file_map.pop(key, None)
 

@@ -1,6 +1,3 @@
-# Created by https://www.toptal.com/developers/gitignore/api/python
-# Edit at https://www.toptal.com/developers/gitignore?templates=python
-
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -175,8 +172,6 @@ pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python
 
-# Created by https://www.toptal.com/developers/gitignore/api/batch
-# Edit at https://www.toptal.com/developers/gitignore?templates=batch
 
 ### Batch ###
 # BatchFiles
@@ -185,3 +180,40 @@ pyrightconfig.json
 *.btm
 
 # End of https://www.toptal.com/developers/gitignore/api/batch
+
+
+### Internal App Data ###
+# Tools
+/Tools/*
+!/Tools/generate_builtin_preset_hashes.py
+!/Tools/generate_preset_paths.py
+!/Tools/Compile/version.rc
+
+# App-created files
+/output/*
+/presets/*
+/config.json
+
+# Resources
+# Icons
+/App/Resources/Icons/*
+!/App/Resources/Icons/MSFluentIcons.py
+!/App/Resources/Icons/.gitkeep
+
+# Images
+/App/Resources/Images/*
+!/App/Resources/Images/.gitkeep
+
+# Presets
+/App/Resources/Presets/*
+!/App/Resources/Presets/BuiltinPresetHashes.py
+!/App/Resources/Presets/PresetPaths.py
+!/App/Resources/Presets/.gitkeep
+
+# .qrc files
+/App/Resources/resources.qrc
+
+# End of Internal App Data
+
+# Keep .gitkeep files
+!**/.gitkeep

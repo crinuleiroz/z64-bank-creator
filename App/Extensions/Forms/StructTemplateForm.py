@@ -1,4 +1,4 @@
-# App/Extensions/BankTemplateForm.py
+# App/Extensions/Forms/StructTemplateForm.py
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QButtonGroup
 
@@ -6,13 +6,13 @@ from qfluentwidgets import ComboBox, LineEdit, RadioButton
 
 # App/Common
 from App.Common.Presets import builtinPresetStore
-from App.Common.Helpers import patch_combo_setCurrentIndex, clone_preset
+from App.Common.Helpers import patch_combo_setCurrentIndex, clone_struct
 
 # App/Extensions
 from App.Extensions.Widgets.CardGroup import CardGroup
 
 
-class PresetTemplateForm(QWidget):
+class StructTemplateForm(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -24,13 +24,8 @@ class PresetTemplateForm(QWidget):
         self._initLayout()
 
     def _initForm(self):
-        # Name
         self._createNameGroup()
-
-        # Game
         self._createTypeGroup()
-
-        # Preset template
         self._createPresetGroup()
 
     def _initLayout(self):
@@ -50,9 +45,7 @@ class PresetTemplateForm(QWidget):
         self.nameGroup.addCard(self.nameEdit)
 
     def _createTypeGroup(self):
-        self.typeGroup = CardGroup('Preset type', 14, self)
-
-        # Type buttons
+        self.typeGroup = CardGroup('Struct type', 14, self)
         self._createTypeButtons()
 
     def _createPresetGroup(self):
@@ -123,7 +116,7 @@ class PresetTemplateForm(QWidget):
             return False
 
         name = self.nameEdit.text().strip()
-        cloned = clone_preset(self.selectedPreset, name)
+        cloned = clone_struct(self.selectedPreset, name)
 
         self.preset = cloned
         return True

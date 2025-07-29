@@ -171,7 +171,7 @@ def clone_bank(original, new_name: str = '', game=''):
     return cloned
 
 
-def clone_preset(original, new_name: str = ''):
+def clone_struct(original, new_name: str = ''):
     from App.Common.Structs import Instrument, Drum, Effect, Sample, Envelope
 
     name = new_name or original.name
@@ -228,13 +228,13 @@ def generate_copy_name(base_name: str, existing_names: set[str]) -> str:
     if base_name not in existing_names:
         return base_name
 
-    copy_name = f'{base_name} Copy'
+    copy_name = f'{base_name} - Copy'
     if copy_name not in existing_names:
         return copy_name
 
     i = 1
     while True:
-        numbered_copy = f'{base_name} Copy {i}'
+        numbered_copy = f'{base_name} - Copy ({i})'
         if numbered_copy not in existing_names:
             return numbered_copy
         i += 1

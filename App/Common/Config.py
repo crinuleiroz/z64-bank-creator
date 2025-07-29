@@ -32,13 +32,6 @@ class Config(QConfig, QObject):
     presetsFolderChanged = Signal(str)
     outputFolderChanged = Signal(str)
 
-    game = OptionsConfigItem(
-        group = 'System',
-        name='Game',
-        default='oot',
-        validator=OptionsValidator(['oot', 'mm'])
-    )
-
     # Appearance
     dpiscale = OptionsConfigItem(
         group='Appearance',

@@ -5,17 +5,20 @@ import subprocess
 from pathlib import Path
 
 
-# Configuration
+# === Configuration ===
 ROOT_DIR = Path(__file__).resolve().parent
 
-# Build resources
+# Internal resource locations
 PRESET_PATH_BUILDER = ROOT_DIR / 'Tools' / 'generate_preset_paths.py'
 BUILTIN_HASH_BUILDER = ROOT_DIR / 'Tools' / 'generate_builtin_preset_hashes.py'
 RSRC_QRC_FILE = ROOT_DIR / 'App' / 'Resources' / 'resources.qrc'
 RSRC_PY_FILE = ROOT_DIR / 'App' / 'Common' / 'Resources.py'
 
-# Compile executable
-BUILD_EXE = True
+# Compile flag
+COMPILE_EXE = True
+
+# version.res and compile information
+OUTPUT_DIR = ROOT_DIR / 'Tools' / 'Compile'
 VERSION_FILE = ROOT_DIR / 'Tools' / 'Compile' / 'version.res'
 ICO_FILE = ROOT_DIR / 'App' / 'Resources' / 'Icons' / 'clef_icon.ico'
 FILE_DESCRIPTION = 'Zelda64 Bank Creator'
@@ -41,21 +44,23 @@ if __name__ == '__main__':
     run(["pyside6-rcc", str(RSRC_QRC_FILE), "-o", str(RSRC_PY_FILE)], 'Compiling Qt resource file')
     run([sys.executable, str(BUILTIN_HASH_BUILDER)], 'Generating BuiltinPresetHashes.py')
 
-    # Compile into executable
-    if BUILD_EXE:
-        nuitka_cmd = [
-            sys.executable, '-m', 'nuitka',
+    # Compile executable file
+    if COMPILE_EXE:
+        compiler_args = [
+            '--mingw64', # Compiler
             '--enable-plugin=pyside6',
-            '--mode=app',
-            '--follow-imports',
-            '--mingw64',
-            f'--windows-icon-from-ico={str(ICO_FILE)}',
-            f'--file-description={FILE_DESCRIPTION}',
-            f'--file-version={FILE_VERSION}',
-            f'--product-name={PRODUCT_NAME}',
-            f'--product-version={PRODUCT_VERSION}',
-            f'--copyright={LEGAL_COPYRIGHT}',
-            str(APP_FILE)
+            '--mode=app', # Compile type
+            # '--follow-imports',
+            '--windows-console-mode=disable', # CLI mode
+            f'--windows-icon-from-ico={str(ICO_FILE)}', # App icon
+            f'--output-dir={OUTPUT_DIR}', # Output directory
+            f'--output-filename={PRODUCT_NAME}', # Original name
+            f'--file-description={FILE_DESCRIPTION}', # File description
+            f'--file-version={FILE_VERSION}', # File version
+            f'--product-name={PRODUCT_NAME}', # Prod name
+            f'--product-version={PRODUCT_VERSION}', # Prod version
+            f'--copyright={LEGAL_COPYRIGHT}', # Copyright
+            str(APP_FILE) # main.py
         ]
 
-        run(nuitka_cmd, 'Compiling executable with nuitka')
+        run([sys.executable, '-m', 'nuitka'] + compiler_args, 'Compiling executable with nuitka')

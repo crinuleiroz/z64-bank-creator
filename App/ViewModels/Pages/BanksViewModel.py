@@ -22,10 +22,9 @@ from App.Common.Serialization import serialize_to_yaml
 from App.Common.Audiobank import Audiobank
 
 # App/Extensions
-from App.Extensions.Components.MSFluentIcons import MSFluentIcon as FICO
+from App.Resources.Icons.MSFluentIcons import MSFluentIcon as FICO
 from App.Extensions.Components.BankCommands import CreateBankCommand, EditTableEntryCommand, EditBankListCommand, DeleteBankCommand
-from App.Extensions.Forms.BankCreationForm import BankCreationForm
-from App.Extensions.Forms.BankTemplateForm import BankTemplateForm
+from App.Extensions.Dialogs.CreatePresetDialog import CreatePresetDialog
 from App.Extensions.Forms.TableEntryEditForm import TableEntryEditForm
 from App.Extensions.Dialogs.BankListEditorDialog import BankListEditorDialog
 
@@ -40,10 +39,6 @@ class EditBankMessageBox(MessageBoxBase):
 
         titleLabel = None
         match formType:
-            case 'empty':
-                titleLabel = SubtitleLabel(f'Create bank', self)
-            case 'template':
-                titleLabel = SubtitleLabel(f'Choose template', self)
             case 'metadata':
                 titleLabel = SubtitleLabel('Edit table entry', self)
             case _:
@@ -63,14 +58,6 @@ class EditBankMessageBox(MessageBoxBase):
 
     def _createForm(self) -> QWidget | None:
         match self.formType.lower():
-            case 'empty':
-                self.yesButton.setText('Create bank')
-                self.cancelButton.setText('Cancel')
-                return BankCreationForm()
-            case 'template':
-                self.yesButton.setText('Create bank')
-                self.cancelButton.setText('Cancel')
-                return BankTemplateForm()
             case 'metadata':
                 self.yesButton.setText('Apply changes')
                 self.cancelButton.setText('Cancel')
@@ -261,7 +248,7 @@ class BanksViewModel(object):
 
     #region Bank Handling
     def _onAddBank(self, formType='empty', boolean=False):
-        dialog = EditBankMessageBox(parent=self.page, bank=None, formType=formType)
+        dialog = CreatePresetDialog('bank', formType, self.page)
 
         if dialog.exec():
             if not dialog.form.applyChanges():

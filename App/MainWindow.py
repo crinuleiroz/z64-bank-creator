@@ -16,7 +16,7 @@ from App.Common.Helpers import load_image_and_resize_image, apply_opacity_to_pix
 from App.Common.Presets import builtinPresetStore, userPresetStore
 
 # App/Extensions
-from App.Extensions.Components.MSFluentIcons import MSFluentIcon as FICO
+from App.Resources.Icons.MSFluentIcons import MSFluentIcon as FICO
 
 # App/Views/Pages
 from App.Views.Pages.HomePage import HomePage

@@ -1,4 +1,4 @@
-# App/Extensions/BankTemplateForm.py
+# App/Extensions/Forms/StructEmptyForm.py
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QButtonGroup
 
@@ -15,7 +15,7 @@ from App.Common.Enums import EnvelopeOpcode
 from App.Common.Structs import Instrument, Drum, Effect, Envelope
 
 
-class PresetEmptyForm(QWidget):
+class StructEmptyForm(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 

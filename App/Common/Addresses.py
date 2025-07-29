@@ -96,7 +96,7 @@ AUDIO_SAMPLE_ADDRESSES: dict[str, dict[str, int]] = {
     'CRUNCH ROAR:C060'       : {'OOT': 0x00416B30, 'MM': -1},
     'DUDUK:D086'             : {'OOT': 0x004428B0, 'MM': -1},
 
-    # MM_Exclusive Samples
+    # MM-Exclusive Samples
     'SURDO:A045'             : {'OOT': -1,         'MM': 0x0028A690},
     'RAWHIDE DRUM:B047'      : {'OOT': -1,         'MM': 0x002917A0},
     'STEEL STR GUITAR:D050'  : {'OOT': -1,         'MM': 0x00295040},

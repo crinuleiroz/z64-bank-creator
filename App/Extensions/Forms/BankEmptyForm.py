@@ -1,6 +1,5 @@
-# App/Extensions/Forms/BankCreationForm.py
+# App/Extensions/Forms/BankEmptyForm.py
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QButtonGroup
 
 from qfluentwidgets import ComboBox, LineEdit, RadioButton
@@ -16,9 +15,10 @@ from App.Extensions.Widgets.ComboBoxCard import ComboBoxCard
 from App.Extensions.Widgets.SpinBoxCard import SpinBoxCard
 
 
-class BankCreationForm(QWidget):
+class BankEmptyForm(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+
         self.bank = None
 
         self._initForm()
@@ -30,7 +30,7 @@ class BankCreationForm(QWidget):
         self._createMetadataGroup()
         self._createDrumkitGroup()
 
-        self.numDrumsCard.spinBox.valueChanged.connect(self._handleDrumCountChange)
+        self.numDrumsCard.spinBox.valueChanged.connect(self._onDrumCountChange)
 
     def _initLayout(self):
         layout = QVBoxLayout(self)
@@ -42,9 +42,9 @@ class BankCreationForm(QWidget):
         layout.addWidget(self.drumkitGroup)
 
     def _createNameGroup(self):
-        self.nameGroup = CardGroup('Bank Name', 14, self)
+        self.nameGroup = CardGroup('Preset name', 14, self)
         self.nameEdit = LineEdit(self.nameGroup)
-        self.nameEdit.setPlaceholderText('Enter bank name')
+        self.nameEdit.setPlaceholderText('Enter preset name')
         self.nameGroup.addCard(self.nameEdit)
 
     def _createGameGroup(self):
@@ -137,16 +137,6 @@ class BankCreationForm(QWidget):
 
         self.drumkitGroup.addCard(self.drumkitCombo)
 
-    def _populateCombobox(self, combobox, enum, *, skip_values=None, default_index=0, min_width=160):
-        skip_values = skip_values or []
-        combobox.clear()
-        for item in enum:
-            if item in skip_values:
-                continue
-            combobox.addItem(item.name, userData=item)
-        combobox.setCurrentIndex(default_index)
-        combobox.setMinimumWidth(min_width)
-
     def _populateDrumkitCombobox(self, comboBox):
         comboBox.clear()
         comboBox.addItem('None', userData=None)
@@ -161,7 +151,7 @@ class BankCreationForm(QWidget):
 
         patch_combo_setCurrentIndex(comboBox)
 
-    def _handleDrumCountChange(self, value):
+    def _onDrumCountChange(self, value):
         if value > 0:
             self._populateDrumkitCombobox(self.drumkitCombo)
             self.drumkitCombo.setEnabled(True)
