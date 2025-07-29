@@ -23,7 +23,7 @@ class EditBankDialog(MessageBoxBase):
         self.viewLayout.addWidget(self.form)
         self.yesButton.setText('Create')
         self.widget.setMinimumWidth(540)
-        self.widget.setMinimumHeight(540)
+        self.widget.setMinimumHeight(540) # Bank lists dialog is too small if not set
 
     def _getTitle(self):
         match self.mode:

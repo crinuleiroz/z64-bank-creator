@@ -7,7 +7,7 @@ from functools import partial
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QShortcut, QUndoStack, QKeySequence
-from PySide6.QtWidgets import QWidget, QListWidgetItem, QFileDialog
+from PySide6.QtWidgets import QListWidgetItem, QFileDialog
 
 from qfluentwidgets import Action, RoundMenu, MenuAnimationType, ListWidget, CommandBar, InfoBar, SegmentedWidget
 from qfluentwidgets import FluentIcon as FIF

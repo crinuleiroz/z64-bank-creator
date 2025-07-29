@@ -135,6 +135,10 @@ class BankListEditForm(QWidget):
                 combo.setCurrentIndex(0)
 
                 for j in range(combo.count()):
+                    # Need to figure out a more consistent way to set these...
+                    # ID works most of the time, but sometimes fails, and get_hash()
+                    # can point to a completely different object... and I do not
+                    # want to store hashes or UUIDs in the files...
                     if combo.itemData(j) == selected:
                         combo.setCurrentIndex(j)
                         break
