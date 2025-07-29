@@ -1,7 +1,7 @@
 # App/Views/Pages/PresetsPage.py
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QWidget, QVBoxLayout
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QAbstractItemView
 
 from qfluentwidgets import TitleLabel, CommandBar, ListWidget, ScrollArea, SegmentedWidget
 
@@ -67,6 +67,7 @@ class PresetsPage(QWidget):
         self.listFrame = Frame(self.scrollWidget)
         self.listView = ListWidget(self.listFrame)
         self.listView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.listView.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
         self.listFrame.addWidget(self.pivot)
         self.listFrame.addWidget(self.listView)

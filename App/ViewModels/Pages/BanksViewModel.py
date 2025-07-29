@@ -5,8 +5,8 @@ from pathlib import Path
 import yaml
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QShortcut, QUndoStack, QUndoCommand, QKeySequence
-from PySide6.QtWidgets import QWidget, QListWidgetItem, QFileDialog
+from PySide6.QtGui import QShortcut, QUndoStack, QKeySequence
+from PySide6.QtWidgets import QWidget, QFileDialog
 
 from qfluentwidgets import (
     SubtitleLabel, Action, MessageBoxBase, RoundMenu, MenuAnimationType,
@@ -23,86 +23,12 @@ from App.Common.Audiobank import Audiobank
 
 # App/Extensions
 from App.Extensions.Components.MSFluentIcons import MSFluentIcon as FICO
+from App.Extensions.Components.BankCommands import CreateBankCommand, EditTableEntryCommand, EditBankListCommand, DeleteBankCommand
 from App.Extensions.Forms.BankCreationForm import BankCreationForm
 from App.Extensions.Forms.BankTemplateForm import BankTemplateForm
 from App.Extensions.Forms.TableEntryEditForm import TableEntryEditForm
 from App.Extensions.Dialogs.BankListEditorDialog import BankListEditorDialog
 
-#region Commands
-# Need to move to components
-class CreateBankCommand(QUndoCommand):
-    def __init__(self, viewModel, bank, description='Create bank'):
-        super().__init__(description)
-        self.viewModel = viewModel
-        self.bank = bank
-        self.item = None
-
-    def undo(self):
-        if not self.item:
-            return
-
-        row = self.viewModel.listView.row(self.item)
-        self.viewModel.listView.takeItem(row)
-
-    def redo(self):
-        if not self.item:
-            self.item = QListWidgetItem(self.bank.name)
-            self.item.setData(Qt.ItemDataRole.UserRole, self.bank)
-
-        self.viewModel.listView.addItem(self.item)
-        self.viewModel.listView.setCurrentItem(self.item)
-
-
-class EditTableEntryCommand(QUndoCommand):
-    def __init__(self, bank, oldEntry, newEntry, viewModel, description='Edit table entry'):
-        super().__init__(description)
-        self.bank = bank
-        self.oldEntry = oldEntry
-        self.newEntry = newEntry
-        self.viewModel = viewModel
-
-    def undo(self):
-        self.bank.tableEntry = self.oldEntry
-        self.viewModel._refreshListView()
-
-    def redo(self):
-        self.bank.tableEntry = self.newEntry
-        self.viewModel._refreshListView()
-
-
-class EditBankListCommand(QUndoCommand):
-    def __init__(self, viewModel, bank, listType, oldList, newList):
-        super().__init__(f'Edit {listType}')
-        self.bank = bank
-        self.listType = listType
-        self.oldList = oldList
-        self.newList = newList
-        self.viewModel = viewModel
-
-    def undo(self):
-        setattr(self.bank, self.listType, self.oldList)
-        self.viewModel._refreshListView()
-
-    def redo(self):
-        setattr(self.bank, self.listType, self.newList)
-        self.viewModel._refreshListView()
-
-
-class DeleteBankCommand(QUndoCommand):
-    def __init__(self, viewModel, item, description='Delete bank'):
-        super().__init__(description)
-        self.viewModel = viewModel
-        self.item = item
-        self.bank = item.data(Qt.ItemDataRole.UserRole)
-        self.row = self.viewModel.listView.row(item)
-
-    def undo(self):
-        self.viewModel.listView.insertItem(self.row, self.item)
-        self.viewModel.listView.setCurrentItem(self.item)
-
-    def redo(self):
-        self.viewModel.listView.takeItem(self.row)
-#endregion
 
 #region Dialogs
 # Will refactor into dialogs and forms later
@@ -192,11 +118,6 @@ class BanksViewModel(object):
         self.editAction = Action(icon=FICO.EDIT, text='Edit', triggered=self._showEditBankMenu)
         self.exportAction = Action(icon=FICO.SHARE_IOS, text='Export', triggered=self._showExportBankMenu)
         self.deleteAction = Action(icon=FICO.DELETE, text='Delete (Del)', triggered=self._onDeleteBank)
-
-        # Set shortcuts (disabled to avoid ambiguous overload)
-        # self.undoAction.setShortcut(QKeySequence('Ctrl+Z'))
-        # self.redoAction.setShortcut(QKeySequence('Ctrl+Y'))
-        # self.deleteAction.setShortcut(QKeySequence('Del'))
 
         # Set intial button states
         self.undoAction.setEnabled(self.undoStack.canUndo())

@@ -6,7 +6,7 @@ from pathlib import Path
 from functools import partial
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QShortcut, QUndoStack, QUndoCommand, QKeySequence
+from PySide6.QtGui import QShortcut, QUndoStack, QKeySequence
 from PySide6.QtWidgets import QWidget, QListWidgetItem, QFileDialog
 
 from qfluentwidgets import Action, RoundMenu, MenuAnimationType, ListWidget, CommandBar, InfoBar, SegmentedWidget
@@ -21,49 +21,11 @@ from App.Common.Structs import Instrument, Drum, Effect, TunedSample, Sample, En
 
 # App/Extensions
 from App.Extensions.Components.MSFluentIcons import MSFluentIcon as FICO
+from App.Extensions.Components.PresetCommands import CreatePresetCommand, EditPresetCommand, PastePresetCommand, DeletePresetCommand
 from App.Extensions.Dialogs.CreatePresetDialog import CreatePresetDialog
 from App.Extensions.Dialogs.EditParameterDialog import EditParameterDialog
 from App.Extensions.Dialogs.EditSampleDialog import EditSampleDialog
 from App.Extensions.Dialogs.EditEnvelopeDialog import EditEnvelopeDialog
-
-
-#region Commands
-# Need to move to components
-class CreatePresetCommand(QUndoCommand):
-    def __init__(self, viewModel, obj, description='Create structure preset'):
-        super().__init__(description)
-        self.viewModel = viewModel
-        self.obj = obj
-        self.item = None
-        self.presetType = viewModel.currentPresetType
-
-    def undo(self):
-        self.viewModel.userPresets.remove_preset(self.obj)
-        self.viewModel._refreshListView()
-
-    def redo(self):
-        self.viewModel.userPresets.add_preset(self.obj)
-        self.viewModel._refreshListView()
-
-
-class EditPresetCommand(QUndoCommand):
-    def __init__(self, viewModel, originalPreset, editedPreset, description='Edit structure preset'):
-        super().__init__(description)
-        self.viewModel = viewModel
-        self.originalPreset = originalPreset
-        self.editedPreset = editedPreset
-        self.item = None
-
-    def undo(self):
-        self.viewModel.userPresets.replace_preset(self.editedPreset, self.originalPreset)
-        self.viewModel._refreshListView()
-        self.viewModel._clearListSelection()
-
-    def redo(self):
-        self.viewModel.userPresets.replace_preset(self.originalPreset, self.editedPreset)
-        self.viewModel._refreshListView()
-        self.viewModel._clearListSelection()
-#endregion
 
 
 class PresetsViewModel(object):
@@ -78,10 +40,11 @@ class PresetsViewModel(object):
         self.builtinPresets = builtinPresetStore
         self.undoStack = QUndoStack()
 
-        self.selectedItem = None
-        self.presetObject = None
-        self.copiedPreset: Instrument | Drum | Effect | Sample | Envelope = None
+        self.selectedItems: list[QListWidgetItem] = []
+        self.selectedPresets: list[Instrument | Drum | Effect | Sample | Envelope] = []
+        self.copiedPresets: list[Instrument | Drum | Effect | Sample | Envelope] = []
         self.currentPresetType = 'instruments'
+        self.copiedPresetType = 'instruments'
         self.editedPresets = set()
 
         # Menu setup
@@ -211,37 +174,35 @@ class PresetsViewModel(object):
         self.undoStack.canRedoChanged.connect(self.redoAction.setEnabled)
 
         self.pivot.currentItemChanged.connect(self._onTabChanged)
-        self.listView.currentItemChanged.connect(self._onItemSelected)
+        self.listView.itemSelectionChanged.connect(self._onSelectionChanged)
         self.listView.customContextMenuRequested.connect(self._onListContextMenu)
     #endregion
 
     #region List Handling
     def _clearListSelection(self):
-        self.presetObject = None
-        self.selectedItem = None
+        self.selectedItems = []
+        self.selectedPresets = []
 
         self.listView.clearSelection()
         self.listView.setCurrentItem(None)
         self.listView.clearFocus()
 
-    def _onItemSelected(self, current, previous):
-        if current is None:
-            self.selectedItem = None
-            self.presetObject = None
-            self.editAction.setEnabled(False)
-            self.exportAction.setEnabled(False)
-            self.deleteAction.setEnabled(False)
-            return
+    def _onSelectionChanged(self):
+        self.selectedItems = self.listView.selectedItems()
+        self.selectedPresets = [
+            item.data(Qt.ItemDataRole.UserRole) for item in self.selectedItems
+        ]
 
-        self.selectedItem = current
-        hasSelection = current is not None
+        self._updateCommandBarButtonState()
 
-        self.editAction.setEnabled(hasSelection)
-        self.exportAction.setEnabled(hasSelection)
+    def _updateCommandBarButtonState(self):
+        selectedCount: int = len(self.selectedItems)
+        hasSelection: bool = selectedCount > 0
+        hasSingleSelection: bool = selectedCount == 1
+
+        self.editAction.setEnabled(hasSingleSelection)
+        self.exportAction.setEnabled(hasSingleSelection)
         self.deleteAction.setEnabled(hasSelection)
-
-        if hasSelection:
-            self.presetObject = current.data(Qt.ItemDataRole.UserRole)
 
     def _onTabChanged(self, value):
         types = {
@@ -319,10 +280,10 @@ class PresetsViewModel(object):
             self._clearListSelection()
 
     def _onExportPreset(self):
-        if not self.selectedItem:
+        if not self.selectedItems and not self.selectedPresets:
             return
 
-        preset = self.selectedItem.data(Qt.ItemDataRole.UserRole)
+        preset = self.selectedPresets[0]
         dict = serialize_to_yaml(preset, self.currentPresetType)
 
         openDir = Path(cfg.presetsfolder.value) / self.currentPresetType
@@ -353,46 +314,69 @@ class PresetsViewModel(object):
         self.userPresets.add_preset(preset, filePath)
 
     def _onDeletePreset(self):
-        if not self.selectedItem:
+        if not self.selectedItems and not self.selectedPresets:
             return
-        # Not Implemented
-        return
+
+        cmd = DeletePresetCommand(
+            self,
+            self.selectedPresets,
+            f'Delete {len(self.selectedPresets)} {self.currentPresetType[:-1]}'
+        )
+        self.undoStack.push(cmd)
+        self._clearListSelection()
 
     def _onCopyPreset(self):
-        if not self.selectedItem:
+        if not self.selectedItems and not self.selectedPresets:
             return
-        self.copiedPreset = self.selectedItem.data(Qt.ItemDataRole.UserRole)
+        self.copiedPresets = self.selectedPresets
+        self.copiedPresetType = self.currentPresetType
 
     def _onPastePreset(self):
-        if not self.copiedPreset:
+        if not self.copiedPresets:
             return
+
+        # Switch tabs before pasting, that way the names are correct
+        # And the user knows where their item was pasted
+        expectedTab = self.copiedPresetType + 'Interface'
+        if self.pivot.currentRouteKey() != expectedTab:
+            self.pivot.setCurrentItem(expectedTab)
+
 
         existingNames = {
             self.listView.item(i).text()
             for i in range(self.listView.count())
         }
 
-        newName = generate_copy_name(self.copiedPreset.name, existingNames)
-        newPreset = clone_preset(
-            original=self.copiedPreset,
-            new_name=newName
-        )
+        pastedPresets = []
+        for presetCopy in self.copiedPresets:
+            newName = generate_copy_name(presetCopy.name, existingNames)
+            newPreset = clone_preset(
+                original=presetCopy,
+                new_name=newName
+            )
 
-        newPreset = presetRegistry.get_or_register(newPreset)
-        cmd = CreatePresetCommand(self, newPreset)
-        self.undoStack.push(cmd)
+            existingNames.add(newName)
+            newPreset = presetRegistry.get_or_register(newPreset)
+            pastedPresets.append(newPreset)
+
+        if pastedPresets:
+            cmd = PastePresetCommand(self, pastedPresets)
+            self.undoStack.push(cmd)
     #endregion
 
     #region Menus
     def _onListContextMenu(self, pos):
-        item = self.listView.itemAt(pos)
-        if item:
-            self.listView.setCurrentItem(item)
+        clickedItem = self.listView.itemAt(pos)
+        if clickedItem and clickedItem not in self.selectedItems:
+            self.listView.setCurrentItem(clickedItem)
 
-        if not self.selectedItem:
+        selectedItems = self.selectedItems
+        selectedPresets = self.selectedPresets
+        copiedPresets = self.copiedPresets
+
+        if not selectedItems and not selectedPresets:
             return
 
-        preset = self.selectedItem.data(Qt.ItemDataRole.UserRole)
         menu = RoundMenu(parent=self.page)
 
         # Actions
@@ -401,14 +385,19 @@ class PresetsViewModel(object):
         exportPresetAction = Action(icon=FICO.SHARE_IOS, text='Export', triggered=self._onExportPreset)
         deletePresetAction = Action(icon=FIF.DELETE, text='Delete', triggered=self._onDeletePreset)
 
-        # Shortcuts
-        # These are here so they show up in the menu
+        # Add shortcuts so they appear in the menu's UI
         copyPresetAction.setShortcut(QKeySequence('Ctrl+C'))
         pastePresetAction.setShortcut(QKeySequence('Ctrl+V'))
         exportPresetAction.setShortcut(QKeySequence('Ctrl+S'))
         deletePresetAction.setShortcut(QKeySequence('Del'))
 
-        menu.addActions([copyPresetAction, pastePresetAction, exportPresetAction, deletePresetAction])
+        # Add actions to menu
+        menu.addAction(copyPresetAction)
+        if copiedPresets:
+            menu.addAction(pastePresetAction)
+        if len(selectedPresets) == 1:
+            menu.addAction(exportPresetAction)
+        menu.addAction(deletePresetAction)
 
         globalPos = self.listView.mapToGlobal(pos)
         menu.exec(globalPos, True, MenuAnimationType.DROP_DOWN)
@@ -444,7 +433,10 @@ class PresetsViewModel(object):
         self._showEditDialog(EditEnvelopeDialog)
 
     def _showEditDialog(self, dialogClass, *args):
-        preset = self.selectedItem.data(Qt.ItemDataRole.UserRole)
+        if len(self.selectedItems) != 1 and len(self.selectedPresets) != 1:
+            return
+
+        preset = self.selectedPresets[0] # Menu opens for single item
         if not preset:
             return
 
@@ -486,7 +478,4 @@ class PresetsViewModel(object):
     #endregion
 
     def onThemeChanged(self):
-        hasSelection = self.selectedItem is not None
-        self.editAction.setEnabled(hasSelection)
-        self.exportAction.setEnabled(hasSelection)
-        self.deleteAction.setEnabled(hasSelection)
+        self._updateCommandBarButtonState()
