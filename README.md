@@ -14,12 +14,12 @@ A python-based Zelda64 instrument bank creator, editor, and compiler with a flue
 - [x] Modify user-defined structure preset sample assignment
 - [x] Modify user-defined structure preset envelope assignment
 ### Instrument Bank Functionality
-- [ ] Load user-defined instrument bank presets
+- [x] Load user-defined instrument bank presets
 - [x] Create empty user-defined instrument bank presets
 - [x] Drumkit selection during empty user-defined instrument bank preset creation
 - [x] Create instrument bank presets from built-in instrument bank
-- [ ] Export user-defined instrument bank presets
-- [ ] Delete user-defined instrument bank presets
+- [x] Export user-defined instrument bank presets
+- [x] Delete user-defined instrument bank presets
 - [x] Modify user-defined instrument bank preset table entry data
 - [x] Modify user-defined instrument bank preset structure assignment
 - [x] Compile user-defined instrument bank presets to binary

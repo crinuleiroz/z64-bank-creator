@@ -1,4 +1,4 @@
-# App/Extensions/Forms/TableEntryForm.py
+# App/Extensions/Forms/TableEntryEditForm.py
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QButtonGroup
@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QButtonGroup
 from qfluentwidgets import LineEdit, RadioButton
 
 # App/Common
-from App.Common.Audiobank import Audiobank, TableEntry, AudioStorageMedium, AudioCacheLoadType, SampleBankId
+from App.Common.Enums import AudioCacheLoadType
 
 # App/Extensions
 from App.Extensions.Widgets.CardGroup import CardGroup

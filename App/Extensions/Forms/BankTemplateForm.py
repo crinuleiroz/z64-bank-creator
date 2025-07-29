@@ -17,7 +17,7 @@ class BankTemplateForm(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.selectedPreset: Audiobank = None
-        self.bank: Audiobank = None
+        self.preset: Audiobank = None
 
         self._initForm()
         self._initLayout()
@@ -53,7 +53,7 @@ class BankTemplateForm(QWidget):
         self.presetSelectCombo = ComboBox(self.presetGroup)
         self.presetSelectCombo.setMaxVisibleItems(8)
         self.presetSelectCombo.currentIndexChanged.connect(self._onPresetSelected)
-        self._populateBankList()
+        self._populatePresetList()
 
         self.presetGroup.addCard(self.presetSelectCombo)
 
@@ -88,9 +88,9 @@ class BankTemplateForm(QWidget):
         self.presetSelectCombo.clear()
         selectedGame = self._getSelectedGame()
 
-        for name, bank in builtinPresetStore.banks.items():
+        for id, bank in builtinPresetStore.banks.items():
             if bank.game == 'SHARED' or bank.game == selectedGame:
-                self.presetSelectCombo.addItem(name, userData=bank)
+                self.presetSelectCombo.addItem(bank.name, userData=bank)
 
         patch_combo_setCurrentIndex(self.presetSelectCombo)
 
@@ -101,7 +101,7 @@ class BankTemplateForm(QWidget):
     def _onPresetSelected(self, index: int):
         self.selectedPreset = self.presetSelectCombo.currentData()
 
-    def _cloneBank(self, original: Audiobank, new_name: str = "") -> Audiobank:
+    def _clonePreset(self, original: Audiobank, new_name: str = "") -> Audiobank:
         cloned = clone_bank(
             original=original,
             new_name=new_name,
@@ -114,8 +114,8 @@ class BankTemplateForm(QWidget):
         if not self.selectedPreset:
             return False
 
-        name_override = self.nameEdit.text().strip()
-        cloned_bank = self._cloneBank(self.selectedPreset, name_override)
+        nameOverride = self.nameEdit.text().strip()
+        clonedPreset = self._clonePreset(self.selectedPreset, nameOverride)
 
-        self.bank = cloned_bank
+        self.preset = clonedPreset
         return True

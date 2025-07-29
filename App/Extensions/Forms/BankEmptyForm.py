@@ -19,7 +19,7 @@ class BankEmptyForm(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.bank = None
+        self.preset = None
 
         self._initForm()
         self._initLayout()
@@ -171,7 +171,7 @@ class BankEmptyForm(QWidget):
         numDrums = self.numDrumsCard.spinBox.value()
         numEffects = self.numEffectsCard.spinBox.value()
 
-        self.bank = Audiobank(
+        self.preset = Audiobank(
             name=self.nameEdit.text(),
             game=self._getSelectedGame(),
             tableEntry=TableEntry(
@@ -188,5 +188,5 @@ class BankEmptyForm(QWidget):
         if self.drumkitCombo.isEnabled():
             selected_kit = self.drumkitCombo.currentData()
             if selected_kit:
-                self.bank.drums = selected_kit.drums[:numDrums]
+                self.preset.drums = selected_kit.drums[:numDrums]
         return True

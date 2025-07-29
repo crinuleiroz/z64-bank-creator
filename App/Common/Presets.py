@@ -44,7 +44,7 @@ class PresetStoreBase:
             case Drumkit():
                 self.drumkits[key] = obj
             case Audiobank():
-                self.banks[obj.name] = obj
+                self.banks[key] = obj
 
         return obj
 
@@ -67,6 +67,9 @@ class PresetStoreBase:
     def get_drumkit_by_name(self, name: str) -> list[Drum] | None:
         return next((dk for dk in self.drumkits.values() if dk.name == name), None)
 
+    def get_bank_by_name(self, name: str) -> Audiobank | None:
+        return next((b for b in self.banks.values() if b.name == name), None)
+
     # Id getters
     def get_instrument(self, key: int):
         return self.instruments.get(key)
@@ -86,8 +89,8 @@ class PresetStoreBase:
     def get_drumkit(self, key: int):
         return self.drumkits.get(key)
 
-    def get_bank(self, name): # Swap to UID later
-        return self.banks.get(name)
+    def get_bank(self, key: int):
+        return self.banks.get(key)
 
     def get_path(self, key: int):
         return self.file_map.get(key)
@@ -139,13 +142,11 @@ class BuiltinPresetStore(PresetStoreBase):
                 obj = effect_from_dict(data, self)
                 self.register(obj, path)
             case 'drumkit':
-                drumkit = drumkit_from_dict(data, self)
-                self.drumkits[id(drumkit)] = drumkit
-                self.file_map[id(drumkit)] = path
+                obj = drumkit_from_dict(data, self)
+                self.register(obj, path)
             case 'bank':
-                bank = bank_from_dict(data, self)
-                self.banks[bank.name] = bank
-                self.file_map[id(bank)] = path
+                obj = bank_from_dict(data, self)
+                self.register(obj, path)
 
         self.loaded_paths.add(path)
 
@@ -167,12 +168,13 @@ class UserPresetStore(PresetStoreBase):
         self.clear()
 
         type_map = {
+            'bank': bank_from_dict,
             'drumkit': drumkit_from_dict,
             'instrument': instrument_from_dict,
             'drum': drum_from_dict,
             'effect': effect_from_dict,
-            'sample': sample_from_dict,
-            'envelope': envelope_from_dict,
+            'sample': lambda data, _: sample_from_dict(data),
+            'envelope': lambda data, _: envelope_from_dict(data),
         }
 
         yaml_files = list(preset_dir.rglob('*.yaml')) + list(preset_dir.rglob('*.yml'))
@@ -194,18 +196,10 @@ class UserPresetStore(PresetStoreBase):
 
             data = raw[root_key]
             try:
-                if root_key == 'drumkit':
-                    drumkit = from_dict(data, self)
-                    self.drumkits[id(drumkit)] = drumkit
-                    self.file_map[id(drumkit)] = str(file)
-                elif root_key in ['instrument', 'drum', 'effect']:
-                    obj = from_dict(data, self)
-                    self.register(obj, str(file))
-                else:  # sample, envelope
-                    obj = from_dict(data)
-                    self.register(obj, str(file))
-            except Exception as e:
-                print(f"[UserPresetStore] Failed to load {root_key} from {file}: {e}")
+                obj = from_dict(data, self)
+                self.register(obj, str(file))
+            except Exception as ex:
+                print(f"[UserPresetStore] Failed to load {root_key} from {file}: {ex}")
 
     def add_preset(self, obj, path=None):
         self.register(obj, path)
@@ -224,6 +218,8 @@ class UserPresetStore(PresetStoreBase):
                 self.samples.pop(key, None)
             case Envelope():
                 self.envelopes.pop(key, None)
+            case Drumkit():
+                self.drumkits.pop(key, None)
             case Audiobank():
                 self.banks.pop(key, None)
 

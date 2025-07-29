@@ -2,11 +2,12 @@
 
 from functools import partial
 from pathlib import Path
+from collections import defaultdict
 import yaml
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QShortcut, QUndoStack, QKeySequence
-from PySide6.QtWidgets import QWidget, QFileDialog
+from PySide6.QtWidgets import QWidget, QFileDialog, QListWidgetItem
 
 from qfluentwidgets import (
     SubtitleLabel, Action, MessageBoxBase, RoundMenu, MenuAnimationType,
@@ -23,48 +24,12 @@ from App.Common.Audiobank import Audiobank
 
 # App/Extensions
 from App.Resources.Icons.MSFluentIcons import MSFluentIcon as FICO
-from App.Extensions.Components.BankCommands import CreateBankCommand, EditTableEntryCommand, EditBankListCommand, DeleteBankCommand
+from App.Extensions.Components.PresetCommands import (
+    CreatePresetCommand, EditBankTableEntryCommand, EditBankListCommand,
+    PastePresetCommand, DeletePresetCommand
+)
 from App.Extensions.Dialogs.CreatePresetDialog import CreatePresetDialog
-from App.Extensions.Forms.TableEntryEditForm import TableEntryEditForm
-from App.Extensions.Dialogs.BankListEditorDialog import BankListEditorDialog
-
-
-#region Dialogs
-# Will refactor into dialogs and forms later
-class EditBankMessageBox(MessageBoxBase):
-    def __init__(self, parent=None, bank=None, formType='metadata'):
-        super().__init__(parent)
-        self.bank = bank
-        self.formType = formType
-
-        titleLabel = None
-        match formType:
-            case 'metadata':
-                titleLabel = SubtitleLabel('Edit table entry', self)
-            case _:
-                titleLabel = SubtitleLabel(f'Edit {self.formType.title()}', self)
-
-        self.form = self._createForm()
-
-        self.viewLayout.addWidget(titleLabel)
-        if self.form:
-            self.viewLayout.addWidget(self.form)
-
-        self.widget.setFixedWidth(550)
-
-    def applyChanges(self):
-        if self.form:
-            self.form.applyChanges()
-
-    def _createForm(self) -> QWidget | None:
-        match self.formType.lower():
-            case 'metadata':
-                self.yesButton.setText('Apply changes')
-                self.cancelButton.setText('Cancel')
-                return TableEntryEditForm(self.bank)
-            case _:
-                return None
-#endregion
+from App.Extensions.Dialogs.EditBankDialog import EditBankDialog
 
 
 class BanksViewModel(object):
@@ -78,15 +43,18 @@ class BanksViewModel(object):
         self.builtinPresets = builtinPresetStore
         self.undoStack = QUndoStack()
 
-        self.selectedItem = None
         self.bankObject = None
-        self.copiedBank = None
+
+        self.selectedItems: list[QListWidgetItem] = []
+        self.selectedPresets: list[Audiobank] = []
+        self.copiedPresets: list[Audiobank] = []
+        self.editedPresets = set()
 
         # Menu setup
         self._setupCommandBarActions()
-        self._setupNewBankMenu()
-        self._setupEditBankMenu()
-        self._setupExportBankMenu()
+        self._setupNewPresetMenu()
+        self._setupEditPresetMenu()
+        self._setupExportPresetMenu()
 
         # Shortcuts
         self._setupPageShortcuts()
@@ -95,16 +63,16 @@ class BanksViewModel(object):
         self._connectSignals()
 
         # Load user banks and refresh list
-        # self._loadAllBanks()
-        # self._refreshListView()
+        # self._loadAllPresets()
+        self._refreshListView()
 
     def _setupCommandBarActions(self):
-        self.createBank = Action(icon=FICO.ADD, text='Add', triggered=self._showNewBankMenu)
+        self.createBank = Action(icon=FICO.ADD, text='Create', triggered=self._showNewPresetMenu)
         self.undoAction = Action(icon=FICO.ARROW_UNDO, text='Undo (Ctrl+Z)', triggered=self.undoStack.undo)
         self.redoAction = Action(icon=FICO.ARROW_REDO, text='Redo (Ctrl+Y)', triggered=self.undoStack.redo)
-        self.editAction = Action(icon=FICO.EDIT, text='Edit', triggered=self._showEditBankMenu)
-        self.exportAction = Action(icon=FICO.SHARE_IOS, text='Export', triggered=self._showExportBankMenu)
-        self.deleteAction = Action(icon=FICO.DELETE, text='Delete (Del)', triggered=self._onDeleteBank)
+        self.editAction = Action(icon=FICO.EDIT, text='Edit', triggered=self._showEditPresetMenu)
+        self.exportAction = Action(icon=FICO.SHARE_IOS, text='Export', triggered=self._showExportPresetMenu)
+        self.deleteAction = Action(icon=FICO.DELETE, text='Delete (Del)', triggered=self._onDeletePreset)
 
         # Set intial button states
         self.undoAction.setEnabled(self.undoStack.canUndo())
@@ -125,56 +93,57 @@ class BanksViewModel(object):
         ])
         createBankButton.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
-    def _setupNewBankMenu(self):
-        self.newBankMenu = RoundMenu()
-        self.emptyBankAction = Action(icon=FICO.ADD_SQUARE, text='Empty bank', triggered=partial(self._onAddBank, 'empty'))
-        self.templateBankAction = Action(icon=FICO.COLLECTIONS, text='Template bank', triggered=partial(self._onAddBank, 'template'))
+    def _setupNewPresetMenu(self):
+        self.newPresetMenu = RoundMenu()
+        self.emptyPresetAction = Action(icon=FICO.ADD_SQUARE, text='Empty bank preset', triggered=partial(self._onCreatePreset, 'empty'))
+        self.templatePresetAction = Action(icon=FICO.COLLECTIONS, text='Bank preset from template', triggered=partial(self._onCreatePreset, 'template'))
 
         # These are here so they show up in the menu
-        self.emptyBankAction.setShortcut(QKeySequence('Ctrl+N'))
-        self.templateBankAction.setShortcut(QKeySequence('Ctrl+Shift+N'))
+        self.emptyPresetAction.setShortcut(QKeySequence('Ctrl+N'))
+        self.templatePresetAction.setShortcut(QKeySequence('Ctrl+Shift+N'))
 
-        self.newBankMenu.addActions([
-            self.emptyBankAction,
-            self.templateBankAction
+        self.newPresetMenu.addActions([
+            self.emptyPresetAction,
+            self.templatePresetAction
         ])
 
-    def _setupEditBankMenu(self):
-        self.editBankMenu = RoundMenu()
-        self.editMetadataAction = Action(icon=FICO.DOCUMENT_EDIT, text='Edit metadata', triggered=self._onEditMetadata)
-        self.editInstrumentsAction = Action(icon=FICO.DOCUMENT_EDIT, text='Edit instruments', triggered=self._onEditInstruments)
-        self.editDrumsAction = Action(icon=FICO.DOCUMENT_EDIT, text='Edit drums', triggered=self._onEditDrums)
-        self.editEffectsAction = Action(icon=FICO.DOCUMENT_EDIT, text='Edit effects', triggered=self._onEditEffects)
+    def _setupEditPresetMenu(self):
+        self.editPresetMenu = RoundMenu()
+
+        self.editTableEntryAction = Action(icon=FICO.DOCUMENT_EDIT, text='Edit table entry', triggered=self._editTableEntryDialog)
+        self.editInstrumentListAction = Action(icon=FICO.DOCUMENT_EDIT, text='Edit instrument list', triggered=self._editInstrumentListDialog)
+        self.editDrumListAction = Action(icon=FICO.DOCUMENT_EDIT, text='Edit drum list', triggered=self._editDrumListDialog)
+        self.editEffectListAction = Action(icon=FICO.DOCUMENT_EDIT, text='Edit effect list', triggered=self._editEffectListDialog)
 
         # These are here so they show up in the menu
-        self.editMetadataAction.setShortcut(QKeySequence('Ctrl+E, M'))
-        self.editInstrumentsAction.setShortcut(QKeySequence('Ctrl+E, I'))
-        self.editDrumsAction.setShortcut(QKeySequence('Ctrl+E, D'))
-        self.editEffectsAction.setShortcut(QKeySequence('Ctrl+E, E'))
+        self.editTableEntryAction.setShortcut(QKeySequence('Ctrl+E, M'))
+        self.editInstrumentListAction.setShortcut(QKeySequence('Ctrl+E, I'))
+        self.editDrumListAction.setShortcut(QKeySequence('Ctrl+E, D'))
+        self.editEffectListAction.setShortcut(QKeySequence('Ctrl+E, E'))
 
-        self.editBankMenu.addAction(self.editMetadataAction)
+        self.editPresetMenu.addAction(self.editTableEntryAction)
 
         if self.bankObject and self.bankObject.tableEntry.numInstruments > 0:
-            self.editBankMenu.addAction(self.editInstrumentsAction)
+            self.editPresetMenu.addAction(self.editInstrumentListAction)
 
         if self.bankObject and self.bankObject.tableEntry.numDrums > 0:
-            self.editBankMenu.addAction(self.editDrumsAction)
+            self.editPresetMenu.addAction(self.editDrumListAction)
 
         if self.bankObject and self.bankObject.tableEntry.numEffects > 0:
-            self.editBankMenu.addAction(self.editEffectsAction)
+            self.editPresetMenu.addAction(self.editEffectListAction)
 
-    def _setupExportBankMenu(self):
-        self.exportBankMenu = RoundMenu()
-        self.saveBankAction = Action(icon=FICO.SAVE, text='Save to YAML', triggered=self._onExportBank)
-        self.compileBankAction = Action(icon=FICO.CODE_BLOCK, text='Compile to binary', triggered=self._onCompileBank)
+    def _setupExportPresetMenu(self):
+        self.exportPresetMenu = RoundMenu()
+        self.savePresetAction = Action(icon=FICO.SAVE, text='Save to YAML', triggered=self._onExportPreset)
+        self.compilePresetAction = Action(icon=FICO.CODE_BLOCK, text='Compile to binary', triggered=self._onCompilePreset)
 
         # These are here so they show up in the menu
-        self.saveBankAction.setShortcut(QKeySequence('Ctrl+S'))
-        self.compileBankAction.setShortcut(QKeySequence('Ctrl+B'))
+        self.savePresetAction.setShortcut(QKeySequence('Ctrl+S'))
+        self.compilePresetAction.setShortcut(QKeySequence('Ctrl+B'))
 
-        self.exportBankMenu.addActions([
-            self.saveBankAction,
-            self.compileBankAction
+        self.exportPresetMenu.addActions([
+            self.savePresetAction,
+            self.compilePresetAction
         ])
 
     def _connectSignals(self):
@@ -182,25 +151,25 @@ class BanksViewModel(object):
         self.undoStack.canUndoChanged.connect(self.undoAction.setEnabled)
         self.undoStack.canRedoChanged.connect(self.redoAction.setEnabled)
 
-        self.listView.currentItemChanged.connect(self._onItemSelected)
+        self.listView.itemSelectionChanged.connect(self._onSelectionChanged)
         self.listView.customContextMenuRequested.connect(self._onListContextMenu)
 
     def _setupPageShortcuts(self):
         shortcut_map = {
-            'Ctrl+N': partial(self._onAddBank, 'empty'),
-            'Ctrl+Shift+N': partial(self._onAddBank, 'template'),
-            'Ctrl+E, M': self._onEditMetadata,
-            'Ctrl+E, I': self._onEditInstruments,
-            'Ctrl+E, D': self._onEditDrums,
-            'Ctrl+E, E': self._onEditEffects,
-            'Ctrl+C': self._onCopyBank,
-            'Ctrl+V': self._onPasteBank,
-            'Ctrl+S': self._onExportBank,
-            'Ctrl+B': self._onCompileBank,
+            'Ctrl+N': partial(self._onCreatePreset, 'empty'),
+            'Ctrl+Shift+N': partial(self._onCreatePreset, 'template'),
+            'Ctrl+E, M': self._editTableEntryDialog,
+            'Ctrl+E, I': self._editInstrumentListDialog,
+            'Ctrl+E, D': self._editDrumListDialog,
+            'Ctrl+E, E': self._editEffectListDialog,
+            'Ctrl+C': self._onCopyPreset,
+            'Ctrl+V': self._onPastePreset,
+            'Ctrl+S': self._onExportPreset,
+            'Ctrl+B': self._onCompilePreset,
             'Ctrl+Z': self.undoStack.undo,
             'Ctrl+Y': self.undoStack.redo,
             'Ctrl+D': self._clearListSelection,
-            'Del': self._onDeleteBank,
+            'Del': self._onDeletePreset,
         }
 
         for seq, func in shortcut_map.items():
@@ -213,148 +182,298 @@ class BanksViewModel(object):
         self.bankObject = None
         self.selectedItem = None
 
+        self.selectedItems = []
+        self.selectedPresets = []
+
         self.listView.clearSelection()
         self.listView.setCurrentItem(None)
         self.listView.clearFocus()
 
-    def _onItemSelected(self, current, previous):
-        if current is None:
-            self.selectedItem = None
-            self.preset_obj = None
-            self.editAction.setEnabled(False)
-            self.exportAction.setEnabled(False)
-            self.deleteAction.setEnabled(False)
-            return
+    def _onSelectionChanged(self):
+        self.selectedItems = self.listView.selectedItems()
+        self.selectedPresets = [item.data(Qt.ItemDataRole.UserRole) for item in self.selectedItems]
 
-        self.selectedItem = current
-        hasSelection = current is not None
+        self._updateCommandBarButtonState()
 
-        self.editAction.setEnabled(hasSelection)
-        self.exportAction.setEnabled(hasSelection)
+    def _updateCommandBarButtonState(self):
+        selectedCount: int = len(self.selectedItems)
+        hasSelection: bool = selectedCount > 0
+        hasSingleSelection: bool = selectedCount == 1
+
+        self.editAction.setEnabled(hasSingleSelection)
+        self.exportAction.setEnabled(hasSingleSelection)
         self.deleteAction.setEnabled(hasSelection)
 
-        if hasSelection:
-            self.bankObject = current.data(Qt.ItemDataRole.UserRole)
-            self._setupEditBankMenu()
+        if hasSingleSelection:
+            self.bankObject = self.selectedPresets[0]
+            self._setupEditPresetMenu()
 
-    def _loadAllBanks(self):
-        # Not implemented
-        return
+    def _loadAllPresets(self):
+        self.builtinPresets.load_builtin_presets()
+        self.userPresets.load_user_presets(Path(cfg.get(cfg.presetsfolder)))
 
+    # def _refreshListView(self):
+    #     # Not implemented
+    #     return
     def _refreshListView(self):
-        # Not implemented
-        return
+        self.listView.clear()
+
+        presetList = self._getPresetList()
+        name_counts = defaultdict(int)
+
+        for obj in presetList:
+            name_counts[obj.name] += 1
+
+        for obj in presetList:
+            displayName = obj.name
+            if name_counts[obj.name] > 1:
+                path = self.userPresets.get_path(obj)
+                if path:
+                    import os
+                    filename = os.path.basename(path)
+                    displayName = f'{obj.name} ({filename})'
+                else:
+                    displayName = f'{obj.name}'
+
+            item = QListWidgetItem(displayName)
+            item.setData(Qt.ItemDataRole.UserRole, obj)
+
+            if id(obj) in self.editedPresets:
+                # item.setIcon(make_dot_icon())
+                pass
+
+            self.listView.addItem(item)
+
+    def _getPresetList(self):
+        return self.userPresets.banks.values()
     #endregion
 
-    #region Bank Handling
-    def _onAddBank(self, formType='empty', boolean=False):
+    #region Preset Handling
+    def _onCreatePreset(self, formType='empty', boolean=False):
         dialog = CreatePresetDialog('bank', formType, self.page)
 
         if dialog.exec():
             if not dialog.form.applyChanges():
                 return
 
-            new_bank = dialog.form.bank
-            new_bank = presetRegistry.get_or_register(new_bank)
+            newPreset = dialog.form.preset
+            newPreset = presetRegistry.get_or_register(newPreset)
 
-            cmd = CreateBankCommand(self, new_bank)
-            self.undoStack.push(cmd)
-
-    def _onEditMetadata(self):
-        if not self.selectedItem:
-            return
-        self._editTableEntry()
-
-    def _onEditInstruments(self):
-        if not self.selectedItem:
-            return
-        self._editBankList('instruments')
-
-    def _onEditDrums(self):
-        if not self.selectedItem:
-            return
-        self._editBankList('drums')
-
-    def _onEditEffects(self):
-        if not self.selectedItem:
-            return
-        self._editBankList('effects')
-
-    def _editTableEntry(self):
-        from copy import deepcopy
-        if not self.selectedItem:
-            return
-
-        bank = self.selectedItem.data(Qt.ItemDataRole.UserRole)
-        oldEntry = deepcopy(bank.tableEntry)
-
-        dialog = EditBankMessageBox(parent=self.page, bank=bank, formType='metadata')
-
-        if dialog.exec():
-            dialog.applyChanges()
-            newEntry = deepcopy(bank.tableEntry)
-            cmd = EditTableEntryCommand(
-                bank=bank,
-                oldEntry=oldEntry,
-                newEntry=newEntry,
-                viewModel=self
-            )
+            cmd = CreatePresetCommand(self, newPreset)
             self.undoStack.push(cmd)
             self._clearListSelection()
-        else:
+
+            # Select newly created item
+            for i in range(self.listView.count()):
+                item = self.listView.item(i)
+                if item.data(Qt.ItemDataRole.UserRole) == newPreset:
+                    item.setSelected(True)
+                    self.listView.setCurrentItem(item)
+                    break
+
+    def _onExportPreset(self):
+        if not self.selectedItems and not self.selectedPresets:
             return
 
-    def _editBankList(self, listType: str):
+        bank = self.selectedPresets[0]
+        dict = serialize_to_yaml(bank, 'banks')
+
+        openDir = Path(cfg.presetsfolder.value) / 'banks'
+        openDir.mkdir(parents=True, exist_ok=True)
+
+        defaultFilename = f'{bank.name}.yaml'
+        defaultFilePath = str(openDir / defaultFilename)
+
+        filePath, _ = QFileDialog.getSaveFileName(
+            self.page,
+            'Export Bank as YAML',
+            defaultFilePath,
+            'YAML Files (*.yaml *.yml)'
+        )
+
+        if not filePath:
+            return
+
+        try:
+            with open(filePath, 'w', encoding='utf-8') as f:
+                yaml.safe_dump(dict, f, sort_keys=False, allow_unicode=True)
+            self._showExportSuccess(filePath)
+        except Exception as ex:
+            self._showErrorTooltip(ex)
+            return
+
+        self.userPresets.remove_preset(bank)
+        self.userPresets.add_preset(bank, filePath)
+
+    def _onCompilePreset(self):
+        if not self.selectedItem and not self.bankObject:
+            return
+
+        success, error = self.bankObject.compile(cfg.get(cfg.outputfolder))
+        if success:
+            self._showCompileSuccess()
+        else:
+            self._showErrorTooltip(error)
+
+    def _onDeletePreset(self):
+        if not self.selectedItems and not self.selectedPresets:
+            return
+
+        item = self.selectedItem
+        cmd = DeletePresetCommand(self, item)
+        self.undoStack.push(cmd)
+
+    def _onCopyPreset(self):
+        if not self.selectedItems and not self.selectedPresets:
+            return
+        self.copiedPresets = self.selectedPresets
+
+    def _onPastePreset(self):
+        if not self.copiedPresets:
+            return
+
+        existingNames = {
+            self.listView.item(i).text()
+            for i in range(self.listView.count())
+        }
+
+        pastedPresets = []
+        for presetCopy in self.copiedPresets:
+            newName = generate_copy_name(presetCopy.name, existingNames)
+            newPreset = clone_bank(
+                original=presetCopy,
+                new_name=newName,
+                game=presetCopy.game
+            )
+
+            existingNames.add(newName)
+            newPreset = presetRegistry.get_or_register(newPreset)
+            pastedPresets.append(newPreset)
+
+        if pastedPresets:
+            cmd = PastePresetCommand(self, pastedPresets, f'Paste {len(pastedPresets)} instrument banks')
+            self.undoStack.push(cmd)
+    #endregion
+
+    #region Menus
+    def _onListContextMenu(self, pos):
+        item = self.listView.itemAt(pos)
+        if item:
+            self.listView.setCurrentItem(item)
+
         if not self.selectedItem:
             return
 
         bank = self.selectedItem.data(Qt.ItemDataRole.UserRole)
+        menu = RoundMenu(parent=self.page)
 
-        match listType.lower():
-            case 'instruments':
-                currentList = bank.instruments
-                presets = self.userPresets.instruments
-            case 'drums':
-                currentList = bank.drums
-                presets = self.userPresets.drums
-            case 'effects':
-                currentList = bank.effects
-                presets = self.userPresets.effects
-            case _:
+        # Actions
+        copyBankAction = Action(icon=FIF.COPY, text='Copy', triggered=self._onCopyPreset)
+        pasteBankAction = Action(icon=FICO.CLIPBOARD_PASTE, text='Paste', triggered=self._onPastePreset)
+        exportBankAction = Action(icon=FICO.SHARE_IOS, text='Export', triggered=self._onExportPreset)
+        deleteBankAction = Action(icon=FIF.DELETE, text='Delete', triggered=self._onDeletePreset)
+
+        # Shortcuts
+        # These are here so they show up in the menu
+        copyBankAction.setShortcut(QKeySequence('Ctrl+C'))
+        pasteBankAction.setShortcut(QKeySequence('Ctrl+V'))
+        exportBankAction.setShortcut(QKeySequence('Ctrl+S'))
+        deleteBankAction.setShortcut(QKeySequence('Del'))
+
+        menu.addActions([copyBankAction, pasteBankAction, exportBankAction, deleteBankAction])
+
+        globalPos = self.listView.mapToGlobal(pos)
+        menu.exec(globalPos, True, MenuAnimationType.DROP_DOWN)
+
+    def _showNewPresetMenu(self):
+        self._showMenuBelowAction(self.createBank, self.newPresetMenu)
+
+    def _showEditPresetMenu(self):
+        self._showMenuBelowAction(self.editAction, self.editPresetMenu)
+
+    def _showExportPresetMenu(self):
+        self._showMenuBelowAction(self.exportAction, self.exportPresetMenu)
+
+    def _showMenuBelowAction(self, targetAction: Action, menu: RoundMenu):
+        for button in self.commandBar.commandButtons:
+            if button.action() is targetAction:
+                pos = button.mapToGlobal(button.rect().bottomLeft())
+                menu.exec(pos, True, MenuAnimationType.DROP_DOWN)
                 return
+    #endregion
 
-        count = len(currentList)
-        if count <= 0:
+    #region Dialogs
+    def _editTableEntryDialog(self):
+        self._showEditDialog()
+
+    def _editInstrumentListDialog(self):
+        self._showEditDialog('instruments')
+
+    def _editDrumListDialog(self):
+        self._showEditDialog('drums')
+
+    def _editEffectListDialog(self):
+        self._showEditDialog('effects')
+
+    def _showEditDialog(self, listType: str | None = None):
+        if not self.selectedItems and not self.selectedPresets:
             return
 
-        presets = self._getCombinedPresets(listType)
+        from copy import deepcopy
 
-        dialog = BankListEditorDialog(
-            title=f'Edit {listType.title()}',
-            count=count,
-            presets=presets,
-            presetType=listType,
-            existingList=currentList,
-            parent=self.page
-        )
+        bank = self.selectedPresets[0]
 
-        for cb, item in zip(dialog.comboBoxes, currentList):
-            index = cb.findData(item)
-            if index != -1:
-                cb.setCurrentIndex(index)
+        if listType is None:
+            oldEntry = deepcopy(bank.tableEntry)
+            dialog = EditBankDialog(
+                mode='tableEntry',
+                bank=bank,
+                parent=self.page
+            )
 
-        if dialog.exec():
-            updatedList = dialog.get_selection()
+            if dialog.exec():
+                dialog.applyChanges()
+                newEntry = deepcopy(bank.tableEntry)
+                cmd = EditBankTableEntryCommand(
+                    preset=bank,
+                    oldEntry=oldEntry,
+                    newEntry=newEntry,
+                    viewModel=self
+                )
+                self.undoStack.push(cmd)
+        else:
+            currentList = {
+                'instruments': bank.instruments,
+                'drums': bank.drums,
+                'effects': bank.effects
+            }.get(listType)
+
+            if not currentList or len(currentList) == 0:
+                return
 
             oldList = currentList.copy()
-            cmd = EditBankListCommand(
-                bank=bank,
+            presets = self._getCombinedPresets(listType)
+
+            dialog = EditBankDialog(
+                mode='bankList',
                 listType=listType,
-                oldList=oldList,
-                newList=updatedList,
-                viewModel=self
+                currentList=currentList,
+                presets=presets,
+                parent=self.page
             )
-            self.undoStack.push(cmd)
+
+            if dialog.exec():
+                newList = dialog.getSelection()
+                cmd = EditBankListCommand(
+                    preset=bank,
+                    listType=listType,
+                    oldList=oldList,
+                    newList=newList,
+                    viewModel=self
+                )
+                self.undoStack.push(cmd)
+
+            # self._clearListSelection()
 
     def _getCombinedPresets(self, listType: str):
         from App.Common.Addresses import AUDIO_SAMPLE_ADDRESSES
@@ -393,133 +512,6 @@ class BanksViewModel(object):
         builtin_names = {p.name for p in builtin_list}
 
         return builtin_list + [p for p in user_list if p.name not in builtin_names]
-
-    def _onExportBank(self):
-        if not self.selectedItem:
-            return
-
-        bank = self.selectedItem.data(Qt.ItemDataRole.UserRole)
-        dict = serialize_to_yaml(bank, 'banks')
-
-        openDir = Path(cfg.presetsfolder.value) / 'banks'
-        openDir.mkdir(parents=True, exist_ok=True)
-
-        defaultFilename = f'{bank.name}.yaml'
-        defaultFilePath = str(openDir / defaultFilename)
-
-        filePath, _ = QFileDialog.getSaveFileName(
-            self.page,
-            'Export Bank as YAML',
-            defaultFilePath,
-            'YAML Files (*.yaml *.yml)'
-        )
-
-        if not filePath:
-            return
-
-        try:
-            with open(filePath, 'w', encoding='utf-8') as f:
-                yaml.safe_dump(dict, f, sort_keys=False, allow_unicode=True)
-            self._showExportSuccess(filePath)
-        except Exception as ex:
-            self._showExportFailure(ex)
-            return
-
-        self.userPresets.remove_preset(bank)
-        self.userPresets.add_preset(bank, filePath)
-
-    def _onCompileBank(self):
-        if not self.selectedItem and not self.bankObject:
-            return
-
-        success, error = self.bankObject.compile(cfg.get(cfg.outputfolder))
-        if success:
-            self._showCompileSuccess()
-        else:
-            self._showCompileFailure(error)
-
-    def _onDeleteBank(self):
-        if not self.selectedItem:
-            return
-
-        item = self.selectedItem
-        cmd = DeleteBankCommand(self, item)
-        self.undoStack.push(cmd)
-
-        self._clearListSelection()
-
-    def _onCopyBank(self):
-        if not self.selectedItem:
-            return
-        self.copiedBank: Audiobank = self.selectedItem.data(Qt.ItemDataRole.UserRole)
-
-    def _onPasteBank(self):
-        if not self.copiedBank:
-            return
-
-        existingNames = {
-            self.listView.item(i).text()
-            for i in range(self.listView.count())
-        }
-
-        newName = generate_copy_name(self.copiedBank.name, existingNames)
-
-        newBank = clone_bank(
-            original=self.copiedBank,
-            new_name=newName,
-            game=self.copiedBank.game
-        )
-        newBank = presetRegistry.get_or_register(newBank)
-
-        cmd = CreateBankCommand(self, newBank)
-        self.undoStack.push(cmd)
-    #endregion
-
-    #region Menus
-    def _onListContextMenu(self, pos):
-        item = self.listView.itemAt(pos)
-        if item:
-            self.listView.setCurrentItem(item)
-
-        if not self.selectedItem:
-            return
-
-        bank = self.selectedItem.data(Qt.ItemDataRole.UserRole)
-        menu = RoundMenu(parent=self.page)
-
-        # Actions
-        copyBankAction = Action(icon=FIF.COPY, text='Copy', triggered=self._onCopyBank)
-        pasteBankAction = Action(icon=FICO.CLIPBOARD_PASTE, text='Paste', triggered=self._onPasteBank)
-        exportBankAction = Action(icon=FICO.SHARE_IOS, text='Export', triggered=self._onExportBank)
-        deleteBankAction = Action(icon=FIF.DELETE, text='Delete', triggered=self._onDeleteBank)
-
-        # Shortcuts
-        # These are here so they show up in the menu
-        copyBankAction.setShortcut(QKeySequence('Ctrl+C'))
-        pasteBankAction.setShortcut(QKeySequence('Ctrl+V'))
-        exportBankAction.setShortcut(QKeySequence('Ctrl+S'))
-        deleteBankAction.setShortcut(QKeySequence('Del'))
-
-        menu.addActions([copyBankAction, pasteBankAction, exportBankAction, deleteBankAction])
-
-        globalPos = self.listView.mapToGlobal(pos)
-        menu.exec(globalPos, True, MenuAnimationType.DROP_DOWN)
-
-    def _showNewBankMenu(self):
-        self._showMenuBelowAction(self.createBank, self.newBankMenu)
-
-    def _showEditBankMenu(self):
-        self._showMenuBelowAction(self.editAction, self.editBankMenu)
-
-    def _showExportBankMenu(self):
-        self._showMenuBelowAction(self.exportAction, self.exportBankMenu)
-
-    def _showMenuBelowAction(self, targetAction: Action, menu: RoundMenu):
-        for button in self.commandBar.commandButtons:
-            if button.action() is targetAction:
-                pos = button.mapToGlobal(button.rect().bottomLeft())
-                menu.exec(pos, True, MenuAnimationType.DROP_DOWN)
-                return
     #endregion
 
     #region Tooltips
@@ -531,14 +523,6 @@ class BanksViewModel(object):
             parent=self.page
         )
 
-    def _showExportFailure(self, error):
-        InfoBar.error(
-            title='Error',
-            content=f'YAML file could not be saved: \n{error}',
-            duration=-1,
-            parent=self.page
-        )
-
     def _showCompileSuccess(self):
         InfoBar.success(
             title='Success',
@@ -547,17 +531,14 @@ class BanksViewModel(object):
             parent=self.page
         )
 
-    def _showCompileFailure(self, error):
+    def _showErrorTooltip(self, errorMsg):
         InfoBar.error(
             title='Error',
-            content=f'Instrument bank could not be compiled: \n{error}',
+            content=f'An unexpected error has occurred:\n{errorMsg}',
             duration=-1,
             parent=self.page
         )
     #endregion
 
     def onThemeChanged(self):
-        hasSelection = self.selectedItem is not None
-        self.editAction.setEnabled(hasSelection)
-        self.exportAction.setEnabled(hasSelection)
-        self.deleteAction.setEnabled(hasSelection)
+        self._updateCommandBarButtonState()

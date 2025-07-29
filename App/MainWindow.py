@@ -21,7 +21,7 @@ from App.Resources.Icons.MSFluentIcons import MSFluentIcon as FICO
 # App/Views/Pages
 from App.Views.Pages.HomePage import HomePage
 from App.Views.Pages.BanksPage import BanksPage
-from App.Views.Pages.PresetsPage import PresetsPage
+from App.Views.Pages.StructsPage import StructsPage
 from App.Views.Pages.SettingsPage import SettingsPage
 
 
@@ -88,7 +88,7 @@ class MainWindow(FluentWindow):
     def _initPages(self):
         self.homePage = HomePage(self)
         self.banksPage = BanksPage(self)
-        self.presetsPage = PresetsPage(self)
+        self.structsPage = StructsPage(self)
         self.settingsPage = SettingsPage(self)
 
     def _initNavigation(self):
@@ -110,7 +110,7 @@ class MainWindow(FluentWindow):
 
         # Presets Page
         self.addSubInterface(
-            interface=self.presetsPage,
+            interface=self.structsPage,
             icon=FICO.DOCUMENT,
             text='Presets',
             isTransparent=False

@@ -21,14 +21,12 @@ from App.Common.Structs import Instrument, Drum, Effect, TunedSample, Sample, En
 
 # App/Extensions
 from App.Resources.Icons.MSFluentIcons import MSFluentIcon as FICO
-from App.Extensions.Components.PresetCommands import CreatePresetCommand, EditPresetCommand, PastePresetCommand, DeletePresetCommand
+from App.Extensions.Components.PresetCommands import CreatePresetCommand, EditStructDataCommand, PastePresetCommand, DeletePresetCommand
 from App.Extensions.Dialogs.CreatePresetDialog import CreatePresetDialog
-from App.Extensions.Dialogs.EditParameterDialog import EditParameterDialog
-from App.Extensions.Dialogs.EditSampleDialog import EditSampleDialog
-from App.Extensions.Dialogs.EditEnvelopeDialog import EditEnvelopeDialog
+from App.Extensions.Dialogs.EditStructDialog import EditStructDialog
 
 
-class PresetsViewModel(object):
+class StructsViewModel(object):
     #region Initialization
     def initPage(self, listView: ListWidget, commandBar: CommandBar, pivot: SegmentedWidget, parentPage):
         self.listView = listView
@@ -60,11 +58,11 @@ class PresetsViewModel(object):
         self._connectSignals()
 
         # Load user presets and refresh list
-        self._loadAllPresets()
+        # self._loadAllPresets()
         self._refreshListView()
 
     def _setupCommandBarActions(self):
-        self.createPreset = Action(icon=FICO.ADD, text='Add', triggered=self._showNewPresetMenu)
+        self.createPreset = Action(icon=FICO.ADD, text='Create', triggered=self._showNewPresetMenu)
         self.undoAction = Action(icon=FICO.ARROW_UNDO, text='Undo (Ctrl+Z)', triggered=self.undoStack.undo)
         self.redoAction = Action(icon=FICO.ARROW_REDO, text='Redo (Ctrl+Y)', triggered=self.undoStack.redo)
         self.editAction = Action(icon=FICO.EDIT, text='Edit', triggered=self._showEditPresetMenu)
@@ -92,8 +90,8 @@ class PresetsViewModel(object):
 
     def _setupNewPresetMenu(self):
         self.newPresetMenu = RoundMenu()
-        self.emptyPresetAction = Action(icon=FICO.ADD_SQUARE, text='Empty preset', triggered=partial(self._onAddPreset, 'empty'))
-        self.templatePresetAction = Action(icon=FICO.COLLECTIONS, text='Template preset', triggered=partial(self._onAddPreset, 'template'))
+        self.emptyPresetAction = Action(icon=FICO.ADD_SQUARE, text='Empty structure preset', triggered=partial(self._onCreatePreset, 'empty'))
+        self.templatePresetAction = Action(icon=FICO.COLLECTIONS, text='Structure preset from template', triggered=partial(self._onCreatePreset, 'template'))
 
         # These are here so they show up in the menu
         self.emptyPresetAction.setShortcut(QKeySequence('Ctrl+N'))
@@ -148,8 +146,8 @@ class PresetsViewModel(object):
 
     def _setupPageShortcuts(self):
         shortcut_map = {
-            'Ctrl+N': partial(self._onAddPreset, 'empty'),
-            'Ctrl+Shift+N': partial(self._onAddPreset, 'template'),
+            'Ctrl+N': partial(self._onCreatePreset, 'empty'),
+            'Ctrl+Shift+N': partial(self._onCreatePreset, 'template'),
             'Ctrl+E, P': self._editParameterDialog,
             'Ctrl+E, S': self._editSampleDialog,
             'Ctrl+E, E': self._editEnvelopeDialog,
@@ -189,9 +187,7 @@ class PresetsViewModel(object):
 
     def _onSelectionChanged(self):
         self.selectedItems = self.listView.selectedItems()
-        self.selectedPresets = [
-            item.data(Qt.ItemDataRole.UserRole) for item in self.selectedItems
-        ]
+        self.selectedPresets = [item.data(Qt.ItemDataRole.UserRole) for item in self.selectedItems]
 
         self._updateCommandBarButtonState()
 
@@ -263,7 +259,7 @@ class PresetsViewModel(object):
     #endregion
 
     #region Preset Handling
-    def _onAddPreset(self, formType='empty', boolean=False):
+    def _onCreatePreset(self, formType='empty', boolean=False):
         dialog = CreatePresetDialog('struct', formType, self.page)
 
         if dialog.exec():
@@ -278,6 +274,14 @@ class PresetsViewModel(object):
             cmd = CreatePresetCommand(self, newPreset, f'Create {self.currentPresetType[:-1]}')
             self.undoStack.push(cmd)
             self._clearListSelection()
+
+            # Select newly created item
+            for i in range(self.listView.count()):
+                item = self.listView.item(i)
+                if item.data(Qt.ItemDataRole.UserRole) == newPreset:
+                    item.setSelected(True)
+                    self.listView.setCurrentItem(item)
+                    break
 
     def _onExportPreset(self):
         if not self.selectedItems and not self.selectedPresets:
@@ -307,7 +311,7 @@ class PresetsViewModel(object):
                 yaml.safe_dump(dict, f, sort_keys=False, allow_unicode=True)
             self._showExportSuccess(filePath)
         except Exception as ex:
-            self._showExportFailure(ex)
+            self._showErrorTooltip(ex)
             return
 
         self.userPresets.remove_preset(preset)
@@ -420,19 +424,19 @@ class PresetsViewModel(object):
     def _editParameterDialog(self):
         if self.currentPresetType in ('effects'):
             return
-        self._showEditDialog(EditParameterDialog, self.currentPresetType)
+        self._showEditDialog('parameters', self.currentPresetType)
 
     def _editSampleDialog(self):
         if self.currentPresetType in ('samples', 'envelopes'):
             return
-        self._showEditDialog(EditSampleDialog, self.currentPresetType)
+        self._showEditDialog('samples', self.currentPresetType)
 
     def _editEnvelopeDialog(self):
         if self.currentPresetType in ('effects'):
             return
-        self._showEditDialog(EditEnvelopeDialog)
+        self._showEditDialog('envelopes')
 
-    def _showEditDialog(self, dialogClass, *args):
+    def _showEditDialog(self, mode, presetType=''):
         if len(self.selectedItems) != 1 and len(self.selectedPresets) != 1:
             return
 
@@ -443,12 +447,12 @@ class PresetsViewModel(object):
         from App.Common.Helpers import clone_struct
         oldPreset = clone_struct(preset)
 
-        dialog = dialogClass(preset, *args, self.page)
+        dialog = EditStructDialog(preset, mode, presetType, self.page)
         if dialog.exec():
             editedPreset = dialog.preset
             dialog.applyChanges()
 
-            cmd = EditPresetCommand(
+            cmd = EditStructDataCommand(
                 originalPreset=oldPreset,
                 editedPreset=editedPreset,
                 viewModel=self
@@ -468,10 +472,10 @@ class PresetsViewModel(object):
             parent=self.page
         )
 
-    def _showExportFailure(self, error):
+    def _showErrorTooltip(self, error):
         InfoBar.error(
             title='Error',
-            content=f'YAML file could not be saved: \n{error}',
+            content=f'An unexpected error has occured:\n{error}',
             duration=-1,
             parent=self.page
         )

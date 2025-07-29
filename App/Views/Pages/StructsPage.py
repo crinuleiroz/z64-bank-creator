@@ -9,13 +9,13 @@ from qfluentwidgets import TitleLabel, CommandBar, ListWidget, ScrollArea, Segme
 from App.Extensions.Widgets.Frame import Frame
 
 # App/ViewModels
-from App.ViewModels.Pages.PresetsViewModel import PresetsViewModel
+from App.ViewModels.Pages.StructsViewModel import StructsViewModel
 
 
-class PresetsPage(QWidget):
+class StructsPage(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
-        self.setObjectName('presetsPage')
+        self.setObjectName('structsPage')
 
         # Core widgets
         self._initHeader()
@@ -27,7 +27,7 @@ class PresetsPage(QWidget):
         self._buildLayout()
 
         # ViewModel
-        self.viewModel = PresetsViewModel()
+        self.viewModel = StructsViewModel()
         self.viewModel.initPage(self.listView, self.commandBar, self.pivot, self)
 
     #region Initialization
@@ -35,7 +35,7 @@ class PresetsPage(QWidget):
         self.headerWidget = QWidget(self)
         self.headerLayout = QVBoxLayout(self.headerWidget)
         self.headerLayout.setContentsMargins(0, 0, 0, 0)
-        self.headerLabel = TitleLabel('Presets')
+        self.headerLabel = TitleLabel('Structure Presets')
 
         self.headerLayout.addWidget(self.headerLabel)
 
@@ -55,7 +55,7 @@ class PresetsPage(QWidget):
 
     def _initScrollArea(self):
         self.scrollArea = ScrollArea(self)
-        self.scrollArea.setObjectName('presetsScrollArea')
+        self.scrollArea.setObjectName('structsScrollArea')
         self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.scrollArea.setStyleSheet('background-color: transparent; border: none;')
 
