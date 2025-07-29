@@ -3,7 +3,7 @@ A python-based Zelda64 instrument bank creator, editor, and compiler with a flue
 
 ## TODO
 > [!IMPORTANT]
-> This is not an exhaustive list of planned features and functionality of the app. This TODO list is a way to keep track of what has and hasn't been implemented to release version 1.0.0 of the app.
+> This is not an exhaustive list of planned features and functionality of the app. This TODO list is a way to keep track of what has and hasn't been implemented in order to release version 1.0.0 of the app.
 ### Structure Functionality
 - [x] Load user-defined structure presets
 - [x] Create empty user-defined structure presets
