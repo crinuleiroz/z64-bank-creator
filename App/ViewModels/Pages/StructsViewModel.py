@@ -364,7 +364,7 @@ class StructsViewModel(object):
             pastedPresets.append(newPreset)
 
         if pastedPresets:
-            cmd = PastePresetCommand(self, pastedPresets)
+            cmd = PastePresetCommand(self, pastedPresets, f'Paste {len(pastedPresets)} {self.currentPresetType}')
             self.undoStack.push(cmd)
     #endregion
 
@@ -387,7 +387,7 @@ class StructsViewModel(object):
         copyPresetAction = Action(icon=FIF.COPY, text='Copy', triggered=self._onCopyPreset)
         pastePresetAction = Action(icon=FICO.CLIPBOARD_PASTE, text='Paste', triggered=self._onPastePreset)
         exportPresetAction = Action(icon=FICO.SHARE_IOS, text='Export', triggered=self._onExportPreset)
-        deletePresetAction = Action(icon=FIF.DELETE, text='Delete', triggered=self._onDeletePreset)
+        deletePresetAction = Action(icon=FICO.DELETE, text='Delete', triggered=self._onDeletePreset)
 
         # Add shortcuts so they appear in the menu's UI
         copyPresetAction.setShortcut(QKeySequence('Ctrl+C'))

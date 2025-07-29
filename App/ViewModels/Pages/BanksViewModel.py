@@ -275,13 +275,13 @@ class BanksViewModel(object):
         if not self.selectedItems and not self.selectedPresets:
             return
 
-        bank = self.selectedPresets[0]
-        dict = serialize_to_yaml(bank, 'banks')
+        preset = self.selectedPresets[0]
+        dict = serialize_to_yaml(preset, 'banks')
 
         openDir = Path(cfg.presetsfolder.value) / 'banks'
         openDir.mkdir(parents=True, exist_ok=True)
 
-        defaultFilename = f'{bank.name}.yaml'
+        defaultFilename = f'{preset.name}.yaml'
         defaultFilePath = str(openDir / defaultFilename)
 
         filePath, _ = QFileDialog.getSaveFileName(
@@ -297,31 +297,46 @@ class BanksViewModel(object):
         try:
             with open(filePath, 'w', encoding='utf-8') as f:
                 yaml.safe_dump(dict, f, sort_keys=False, allow_unicode=True)
-            self._showExportSuccess(filePath)
+            self._showSuccessTooltip(f'Exported {preset.name} YAML to: {filePath}')
         except Exception as ex:
             self._showErrorTooltip(ex)
             return
 
-        self.userPresets.remove_preset(bank)
-        self.userPresets.add_preset(bank, filePath)
+        self.userPresets.remove_preset(preset)
+        self.userPresets.add_preset(preset, filePath)
 
     def _onCompilePreset(self):
-        if not self.selectedItem and not self.bankObject:
+        if not self.selectedItems and not self.selectedPresets:
             return
 
-        success, error = self.bankObject.compile(cfg.get(cfg.outputfolder))
-        if success:
-            self._showCompileSuccess()
-        else:
-            self._showErrorTooltip(error)
+        successMsgs = []
+        errorMsgs = []
+
+        for preset in self.selectedPresets:
+            success, error = preset.compile(cfg.get(cfg.outputfolder))
+
+            if success:
+                successMsgs.append(f'Compiled {preset.name} to: {cfg.outputfolder.value}')
+            else:
+                errorMsgs.append(f'Error compiling {preset.name}: {error}')
+
+        if successMsgs:
+            self._showSuccessTooltip('\n'.join(successMsgs))
+
+        if errorMsgs:
+            self._showErrorTooltip('\n'.join(errorMsgs))
 
     def _onDeletePreset(self):
         if not self.selectedItems and not self.selectedPresets:
             return
 
-        item = self.selectedItem
-        cmd = DeletePresetCommand(self, item)
+        cmd = DeletePresetCommand(
+            self,
+            self.selectedPresets,
+            f'Delete {len(self.selectedPresets)} instrument banks'
+        )
         self.undoStack.push(cmd)
+        self._clearListSelection()
 
     def _onCopyPreset(self):
         if not self.selectedItems and not self.selectedPresets:
@@ -357,30 +372,38 @@ class BanksViewModel(object):
 
     #region Menus
     def _onListContextMenu(self, pos):
-        item = self.listView.itemAt(pos)
-        if item:
-            self.listView.setCurrentItem(item)
+        clickedItem = self.listView.itemAt(pos)
+        if clickedItem and clickedItem not in self.selectedItems:
+            self.listView.setCurrentItem(clickedItem)
 
-        if not self.selectedItem:
+        selectedItems = self.selectedItems
+        selectedPresets = self.selectedPresets
+        copiedPresets = self.copiedPresets
+
+        if not selectedItems and not selectedPresets:
             return
 
-        bank = self.selectedItem.data(Qt.ItemDataRole.UserRole)
         menu = RoundMenu(parent=self.page)
 
         # Actions
-        copyBankAction = Action(icon=FIF.COPY, text='Copy', triggered=self._onCopyPreset)
-        pasteBankAction = Action(icon=FICO.CLIPBOARD_PASTE, text='Paste', triggered=self._onPastePreset)
-        exportBankAction = Action(icon=FICO.SHARE_IOS, text='Export', triggered=self._onExportPreset)
-        deleteBankAction = Action(icon=FIF.DELETE, text='Delete', triggered=self._onDeletePreset)
+        copyPresetAction = Action(icon=FIF.COPY, text='Copy', triggered=self._onCopyPreset)
+        pastePresetAction = Action(icon=FICO.CLIPBOARD_PASTE, text='Paste', triggered=self._onPastePreset)
+        exportPresetAction = Action(icon=FICO.SHARE_IOS, text='Export', triggered=self._onExportPreset)
+        deletePresetAction = Action(icon=FICO.DELETE, text='Delete', triggered=self._onDeletePreset)
 
-        # Shortcuts
-        # These are here so they show up in the menu
-        copyBankAction.setShortcut(QKeySequence('Ctrl+C'))
-        pasteBankAction.setShortcut(QKeySequence('Ctrl+V'))
-        exportBankAction.setShortcut(QKeySequence('Ctrl+S'))
-        deleteBankAction.setShortcut(QKeySequence('Del'))
+        # Add shortcuts so they appear in the menu's UI
+        copyPresetAction.setShortcut(QKeySequence('Ctrl+C'))
+        pastePresetAction.setShortcut(QKeySequence('Ctrl+V'))
+        exportPresetAction.setShortcut(QKeySequence('Ctrl+S'))
+        deletePresetAction.setShortcut(QKeySequence('Del'))
 
-        menu.addActions([copyBankAction, pasteBankAction, exportBankAction, deleteBankAction])
+        # Add actions to menu
+        menu.addAction(copyPresetAction)
+        if copiedPresets:
+            menu.addAction(pastePresetAction)
+        if len(selectedPresets) == 1:
+            menu.addAction(exportPresetAction)
+        menu.addAction(deletePresetAction)
 
         globalPos = self.listView.mapToGlobal(pos)
         menu.exec(globalPos, True, MenuAnimationType.DROP_DOWN)
@@ -416,7 +439,7 @@ class BanksViewModel(object):
         self._showEditDialog('effects')
 
     def _showEditDialog(self, listType: str | None = None):
-        if not self.selectedItems and not self.selectedPresets:
+        if len(self.selectedItems) != 1 and len(self.selectedPresets) != 1:
             return
 
         from copy import deepcopy
@@ -515,26 +538,18 @@ class BanksViewModel(object):
     #endregion
 
     #region Tooltips
-    def _showExportSuccess(self, filePath):
+    def _showSuccessTooltip(self, content):
         InfoBar.success(
             title='Success',
-            content=f'YAML file has been saved to the following folder: \n{filePath}',
+            content=content,
             duration=5000,
             parent=self.page
         )
 
-    def _showCompileSuccess(self):
-        InfoBar.success(
-            title='Success',
-            content=f'The instrument bank has been compiled to the output folder: \n{cfg.outputfolder.value}',
-            duration=5000,
-            parent=self.page
-        )
-
-    def _showErrorTooltip(self, errorMsg):
+    def _showErrorTooltip(self, content):
         InfoBar.error(
             title='Error',
-            content=f'An unexpected error has occurred:\n{errorMsg}',
+            content=content,
             duration=-1,
             parent=self.page
         )
