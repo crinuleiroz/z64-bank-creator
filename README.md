@@ -80,10 +80,10 @@ A python-based Zelda64 instrument bank creator, editor, and compiler with a flue
 | `Ctrl+E, P` | Opens the dialog to edit a user-defined structure preset's parameters |
 | `Ctrl+E, S` | Opens the dialog to edit a user-defined structure preset's sample assignment |
 | `Ctrl+E, E` | Opens the dialog to edit a user-defined structure preset's envelope assignment |
-| `Ctrl+E, M` | Edit selected bank's metadata |
-| `Ctrl+E, I` | Edit selected bank's instrument list |
-| `Ctrl+E, D` | Edit selected bank's drum list |
-| `Ctrl+E, E` | Edit selected bank's effect list |
+| `Ctrl+E, M` | Opens the dialog to edit a user-defined instrument bank preset's table entry data |
+| `Ctrl+E, I` | Opens the dialog to edit a user-defined instrument bank preset's instrument assignment |
+| `Ctrl+E, D` | Opens the dialog to edit a user-defined instrument bank preset's drum assignment |
+| `Ctrl+E, E` | Opens the dialog to edit a user-defined instrument bank preset's effect assignment |
 | `Ctrl+Z` | Undo the last edit made to a user-defined preset (page dependent) |
 | `Ctrl+Y` | Redo the last edit made to a user-defined preset (page dependent) |
 | `Ctrl+C` | Copy the selected user-defined preset(s) |
