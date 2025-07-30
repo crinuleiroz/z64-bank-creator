@@ -10,7 +10,7 @@ A python-based Zelda64 instrument bank creator, editor, and compiler with a flue
 - [x] Create user-defined structure presets from built-in structure
 - [x] Export user-defined structure presets
 - [x] Delete user-defined structure presets
-- [ ] Modify user-defined structure preset parameters (All but samples and envelopes)
+- [ ] Modify user-defined structure preset parameters (All but samples)
 - [x] Modify user-defined structure preset sample assignment
 - [x] Modify user-defined structure preset envelope assignment
 ### Instrument Bank Functionality
