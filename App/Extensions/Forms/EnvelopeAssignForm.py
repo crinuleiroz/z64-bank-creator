@@ -13,7 +13,7 @@ from App.Common.Helpers import populate_combo_box
 from App.Extensions.Widgets.CardGroup import CardGroup
 
 
-class EnvelopeEditForm(QWidget):
+class EnvelopeAssignForm(QWidget):
     def __init__(self, preset, parent=None):
         super().__init__(parent)
         self.preset = preset

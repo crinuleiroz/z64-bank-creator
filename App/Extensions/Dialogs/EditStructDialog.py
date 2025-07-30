@@ -4,8 +4,9 @@ from qfluentwidgets import MessageBoxBase, SubtitleLabel
 
 # App/Extensions
 from App.Extensions.Forms.ParameterEditForm import InstrumentParameterForm, DrumParameterForm
-from App.Extensions.Forms.SampleEditForm import MultiSampleForm, SingleSampleForm
-from App.Extensions.Forms.EnvelopeEditForm import EnvelopeEditForm
+from App.Extensions.Forms.SampleAssignForm import MultiSampleAssignForm, SingleSampleAssignForm
+from App.Extensions.Forms.EnvelopeAssignForm import EnvelopeAssignForm
+from App.Extensions.Forms.EnvelopeArrayEditForm import EnvelopeArrayEditForm
 
 
 class EditStructDialog(MessageBoxBase):
@@ -16,9 +17,9 @@ class EditStructDialog(MessageBoxBase):
         self.presetType = presetType
 
         self.form = None
-        self._buildLayout()
+        self._initLayout()
 
-    def _buildLayout(self):
+    def _initLayout(self):
         formClass, title = self._getForm()
         if not formClass:
             return
@@ -29,19 +30,20 @@ class EditStructDialog(MessageBoxBase):
         self.viewLayout.addWidget(self.titleLabel)
         self.viewLayout.addWidget(self.form)
         self.widget.setMinimumWidth(540)
+        self.widget.setMinimumHeight(540)
 
         self.yesButton.setText('Apply')
 
     def _getForm(self):
-        parameterTitle = 'Edit parameters'
-        multiSample = (MultiSampleForm, 'Assign samples')
-        singleSample = (SingleSampleForm, 'Assign sample')
+        multiSample = (MultiSampleAssignForm, 'Assign samples')
+        singleSample = (SingleSampleAssignForm, 'Assign sample')
 
         match self.mode:
             case 'parameters':
                 return self._resolveByType({
-                    'instruments': (InstrumentParameterForm, parameterTitle),
-                    'drums': (DrumParameterForm, parameterTitle)
+                    'instruments': (InstrumentParameterForm, 'Edit instrument parameters'),
+                    'drums': (DrumParameterForm, 'Edit drum parameters'),
+                    'envelopes': (EnvelopeArrayEditForm, 'Edit envelope')
                 })
             case 'samples':
                 return self._resolveByType({
@@ -50,7 +52,7 @@ class EditStructDialog(MessageBoxBase):
                     'effects': singleSample
                 })
             case 'envelopes':
-                return EnvelopeEditForm, 'Assign envelope'
+                return EnvelopeAssignForm, 'Assign envelope'
 
     def _resolveByType(self, mapping):
         return mapping.get(self.presetType, (None, None))

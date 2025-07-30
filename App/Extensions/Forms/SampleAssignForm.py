@@ -14,7 +14,7 @@ from App.Common.Helpers import populate_combo_box
 from App.Extensions.Widgets.CardGroup import CardGroup
 
 
-class MultiSampleForm(QWidget):
+class MultiSampleAssignForm(QWidget):
     def __init__(self, preset, parent=None):
         super().__init__(parent)
         self.preset = preset
@@ -49,7 +49,7 @@ class MultiSampleForm(QWidget):
         self.preset.high_sample = TunedSample(highSample, highTuning) if highSample else None
 
 
-class SingleSampleForm(QWidget):
+class SingleSampleAssignForm(QWidget):
     def __init__(self, preset, parent=None):
         super().__init__(parent)
         self.preset = preset

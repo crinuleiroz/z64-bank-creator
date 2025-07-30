@@ -198,9 +198,13 @@ class BanksViewModel(object):
         hasSingleSelection: bool = selectedCount == 1
 
         self.editAction.setEnabled(hasSingleSelection)
+
+        # Compiling allows multiple selections, and does not prompt where to save, it just saves
+        # to the output folder set in config
         self.exportAction.setEnabled(hasSelection)
         if self.exportAction.isEnabled():
             self.savePresetAction.setEnabled(hasSingleSelection)
+
         self.deleteAction.setEnabled(hasSelection)
 
         if hasSingleSelection:

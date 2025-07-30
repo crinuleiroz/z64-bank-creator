@@ -24,13 +24,9 @@ class BankListEditForm(QWidget):
         self.rowWidgets = []
         self._rowCreationIndex = 0
 
-        self._initForm()
         self._initLayout()
 
         QTimer.singleShot(0, self._createRowsIncrementally)
-
-    def _initForm(self):
-        ...
 
     def _initLayout(self):
         self.mainLayout = QVBoxLayout(self)
