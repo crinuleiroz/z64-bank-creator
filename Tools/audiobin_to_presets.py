@@ -106,26 +106,22 @@ class Audiobin:
 #region Table Entry
 class TableEntry:
     def __init__(self, table_entry: bytearray):
-        self.address: int
-        self.size: int
-        self.storage_medium: AudioStorageMedium
-        self.cache_load_type: AudioCacheLoadType
-        self.sample_bank_id_1: SampleBankId
-        self.sample_bank_id_2: SampleBankId
-        self.num_instruments: int
-        self.num_drums: int
-        self.num_effects: int
         (
             self.address,
             self.size,
-            self.storage_medium,
-            self.cache_load_type,
-            self.sample_bank_id_1,
-            self.sample_bank_id_2,
+            raw_storage_medium,
+            raw_cache_load_type,
+            _, # The sample bank does not matter
+            _, # The sample bank does not matter
             self.num_instruments,
             self.num_drums,
             self.num_effects
         ) = unpack('>2I6BH', table_entry)
+
+        self.storage_medium = AudioStorageMedium(raw_storage_medium)
+        self.cache_load_type = AudioCacheLoadType(raw_cache_load_type)
+        self.sample_bank_id_1 = SampleBankId.BANK_0
+        self.sample_bank_id_2 = SampleBankId.NO_BANK
 #endregion
 
 
@@ -162,6 +158,28 @@ class Audiobank:
             addr = int.from_bytes(self.bank_data[addr:addr + 4], 'big')
             instrument = Instrument(self.bank_data, addr) if addr != 0 else None
             self.instruments.append(instrument)
+
+    def __eq__(self, other):
+        if not isinstance(other, Audiobank):
+            return False
+        return (
+            self.game == other.game and
+            self.table_entry == other.table_entry and
+            self.drums == other.drums and
+            self.effects == other.effects and
+            self.instruments == other.instruments and
+            self.bank_data == other.bank_data
+        )
+
+    def __hash__(self):
+        return hash((
+            self.game,
+            self.table_entry,
+            tuple(self.drums),
+            tuple(self.effects),
+            tuple(self.instruments),
+            self.bank_data
+        ))
 #endregion
 
 
@@ -325,6 +343,41 @@ class Sample:
 
     def __eq__(self, other):
         return isinstance(other, Sample) and hash(self) == hash(other)
+
+    def equals_ignore_vrom(self, other: 'Sample') -> bool:
+        if not isinstance(other, Sample):
+            return False
+
+        return (
+            self.unk_0 == other.unk_0 and
+            self.codec == other.codec and
+            self.medium == other.medium and
+            self.is_cached == other.is_cached and
+            self.is_relocated == other.is_relocated and
+            self.size == other.size and
+            self.vadpcm_loop.loop_start == other.vadpcm_loop.loop_start and
+            self.vadpcm_loop.loop_end == other.vadpcm_loop.loop_end and
+            self.vadpcm_loop.loop_count == other.vadpcm_loop.loop_count and
+            self.vadpcm_loop.num_samples == other.vadpcm_loop.num_samples and
+            (self.vadpcm_loop.predictors or []) == (other.vadpcm_loop.predictors or []) and
+            self.vadpcm_book.order == other.vadpcm_book.order and
+            self.vadpcm_book.num_predictors == other.vadpcm_book.num_predictors and
+            self.vadpcm_book.predictors == other.vadpcm_book.predictors
+        )
+
+    def hash_ignore_vrom(self):
+        return hash((
+            self.unk_0, self.codec, self.medium, self.is_cached,
+            self.is_relocated, self.size,
+            self.vadpcm_loop.loop_start,
+            self.vadpcm_loop.loop_end,
+            self.vadpcm_loop.loop_count,
+            self.vadpcm_loop.num_samples,
+            tuple(self.vadpcm_loop.predictors or []),
+            self.vadpcm_book.order,
+            self.vadpcm_book.num_predictors,
+            tuple(self.vadpcm_book.predictors)
+        ))
 
 
 class VadpcmLoop:
@@ -496,10 +549,10 @@ def serialize_effect(effect: Effect, index: int = 0):
 
 def serialize_bank(game: str, bank: Audiobank, index: int = 0):
     table_entry_dict = {
-        'storage_medium': bank.table_entry.storage_medium,
-        'cache_load_type': bank.table_entry.cache_load_type,
-        'sample_bank_id_1': bank.table_entry.sample_bank_id_1,
-        'sample_bank_id_2': bank.table_entry.sample_bank_id_2,
+        'storage_medium': bank.table_entry.storage_medium.name,
+        'cache_load_type': bank.table_entry.cache_load_type.name,
+        'sample_bank_id_1': bank.table_entry.sample_bank_id_1.name,
+        'sample_bank_id_2': bank.table_entry.sample_bank_id_2.name,
         'num_instruments': bank.table_entry.num_instruments,
         'num_drums': bank.table_entry.num_drums,
         'num_effects': bank.table_entry.num_effects
