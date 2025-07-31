@@ -67,7 +67,7 @@ A python-based Zelda64 instrument bank creator, editor, and compiler with a flue
 - [ ] Implement built-in sample presets (Majora's Mask done)
 - [x] Implement built-in envelope presets
 - [ ] Implement built-in instrument bank presets
-- [ ] Implement built-in drumkit presets
+- [x] Implement built-in drumkit presets
 - [x] Add handling for built-in sample preset VROM addresses
 
 ### Keyboard Shortcuts
