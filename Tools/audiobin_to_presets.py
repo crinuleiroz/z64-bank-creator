@@ -19,6 +19,7 @@ from App.Common.Enums import (
     AudioSampleCodec, AudioSampleLoopCount, EnvelopeOpcode,
     IntEnum
 )
+from App.Common.Addresses import AUDIO_SAMPLE_ADDRESSES
 
 
 #region Audiobin
@@ -419,7 +420,7 @@ class Envelope:
 
 
 #region Serializers
-def serialize_envelope(envelope: Envelope, index: int = 0):
+def serialize_envelope(game: str, envelope: Envelope, index: int = 0):
     return {
         'name': f'Envelope_{index}',
         'array': FlowStyleList([
@@ -429,19 +430,21 @@ def serialize_envelope(envelope: Envelope, index: int = 0):
     }
 
 
-def serialize_sample(sample: Sample, index: int = 0, region: str = ''):
+def serialize_sample(game: str, sample: Sample, index: int = 0, region: str = ''):
     if sample is None:
         return None
 
+    name = get_sample_name_from_address(game, sample.vrom_address)
+
     dict = {
-        'name': f'Sample_{index}_{region}' if region else f'Sample_{index}',
+        'name': name if name is not None else f'Sample_{index}_{region}' if region else f'Sample_{index}',
         'unk_0': sample.unk_0,
         'codec': sample.codec.name,
         'medium': sample.medium.name,
         'is_cached': sample.is_cached,
         'is_relocated': sample.is_relocated,
         'size': sample.size,
-        'vrom_address': sample.vrom_address,
+        'vrom_address': name if name is not None else sample.vrom_address,
         'vadpcm_loop': {
             'loop_start': sample.vadpcm_loop.loop_start,
             'loop_end': sample.vadpcm_loop.loop_end,
@@ -461,64 +464,68 @@ def serialize_sample(sample: Sample, index: int = 0, region: str = ''):
     return dict
 
 
-def serialize_instrument(instrument: Instrument, index: int = 0):
+def serialize_instrument(game: str, instrument: Instrument, index: int = 0):
+    name = get_sample_name_from_address(game, instrument.prim_sample.sample.vrom_address)
     dict = {
         'instrument': {
-            'name': f'Instrument_{index}',
+            'name': name if name is not None else f'Instrument_{index}',
             'is_relocated': instrument.is_relocated,
             'key_region_low': instrument.key_region_low,
             'key_region_high': instrument.key_region_high,
             'decay_index': instrument.decay_index,
 
-            'envelope': serialize_envelope(instrument.envelope, index=index)
+            'envelope': serialize_envelope(game, instrument.envelope, index=index)
         }
     }
 
     if instrument.low_sample:
         dict['instrument']['low_sample'] = {
-            'sample': serialize_sample(instrument.low_sample.sample, index=index, region='Low'),
+            'sample': serialize_sample(game, instrument.low_sample.sample, index=index, region='Low'),
             'tuning': instrument.low_sample.tuning
         }
 
     if instrument.prim_sample:
         dict['instrument']['prim_sample'] = {
-            'sample': serialize_sample(instrument.prim_sample.sample, index=index, region='Prim'),
+            'sample': serialize_sample(game, instrument.prim_sample.sample, index=index, region='Prim'),
             'tuning': instrument.prim_sample.tuning
         }
 
     if instrument.high_sample:
         dict['instrument']['high_sample'] = {
-            'sample': serialize_sample(instrument.high_sample.sample, index=index, region='High'),
+            'sample': serialize_sample(game, instrument.high_sample.sample, index=index, region='High'),
             'tuning': instrument.high_sample.tuning
         }
 
     return dict
 
 
-def serialize_drum(drum: Drum, index: int = 0):
+def serialize_drum(game: str, drum: Drum, index: int = 0):
+    name = get_sample_name_from_address(game, drum.drum_sample.sample.vrom_address)
     return {
         'drum': {
-            'name': f'Drum_{index}',
+            'name': name if name is not None else f'Drum_{index}',
             'decay_index': drum.decay_index,
             'pan': drum.pan,
             'drum_sample': {
-                'sample': serialize_sample(drum.drum_sample.sample, index=index),
+                'sample': serialize_sample(game, drum.drum_sample.sample, index=index),
                 'tuning': drum.drum_sample.tuning
             },
-            'envelope': serialize_envelope(drum.envelope, index=index)
+            'envelope': serialize_envelope(game, drum.envelope, index=index)
         }
     }
 
 
-def serialize_effect(effect: Effect, index: int = 0):
+def serialize_effect(game: str, effect: Effect, index: int = 0):
     if effect and effect.effect_sample is None:
         return None
 
+    name = get_sample_name_from_address(game, effect.effect_sample.sample.vrom_address)
+
     return {
         'effect': {
-            'name': f'Effect_{index}',
+            'name': name if name is not None else f'Effect_{index}',
             'effect_sample': {
-                'sample': serialize_sample(effect.effect_sample.sample, index=index),
+                'sample': serialize_sample(game, effect.effect_sample.sample, index=index),
                 'tuning': effect.effect_sample.tuning
             }
         }
@@ -541,21 +548,21 @@ def serialize_bank(game: str, bank: Audiobank, index: int = 0):
         if inst is None:
             instrument_data.append(None)
         else:
-            instrument_data.append(serialize_instrument(inst, index=i))
+            instrument_data.append(serialize_instrument(game, inst, index=i))
 
     drum_data = []
     for i, drum in enumerate(bank.drums or []):
         if drum is None:
             drum_data.append(None)
         else:
-            drum_data.append(serialize_drum(drum, index=i))
+            drum_data.append(serialize_drum(game, drum, index=i))
 
     effect_data = []
     for i, effect in enumerate(bank.effects or []):
         if effect is None:
             effect_data.append(None)
         else:
-            effect_data.append(serialize_effect(effect, index=i))
+            effect_data.append(serialize_effect(game, effect, index=i))
 
     bank_dict = {
         'bank': {
@@ -575,24 +582,24 @@ def serialize_bank(game: str, bank: Audiobank, index: int = 0):
     return bank_dict
 
 
-def serialize_unique_envelope(envelope: Envelope, index: int = 0):
-    return { 'envelope': serialize_envelope(envelope, index) }
+def serialize_unique_envelope(game: str, envelope: Envelope, index: int = 0):
+    return { 'envelope': serialize_envelope(game, envelope, index) }
 
 
-def serialize_unique_sample(sample: Sample, index: int = 0):
-    return { 'sample': serialize_sample(sample, index) }
+def serialize_unique_sample(game: str, sample: Sample, index: int = 0):
+    return { 'sample': serialize_sample(game, sample, index) }
 
 
-def serialize_unique_instrument(instrument: Instrument, index: int = 0):
-    return serialize_instrument(instrument, index)
+def serialize_unique_instrument(game: str, instrument: Instrument, index: int = 0):
+    return serialize_instrument(game, instrument, index)
 
 
-def serialize_unique_drum(drum: Drum, index: int = 0):
-    return serialize_drum(drum, index)
+def serialize_unique_drum(game: str, drum: Drum, index: int = 0):
+    return serialize_drum(game, drum, index)
 
 
-def serialize_unique_effect(effect: Effect, index: int = 0):
-    return serialize_effect(effect, index)
+def serialize_unique_effect(game: str, effect: Effect, index: int = 0):
+    return serialize_effect(game, effect, index)
 #endregion
 
 
@@ -615,11 +622,18 @@ def skip_bank(game: str, index: int) -> bool:
         return True
 
     return False
+
+
+def get_sample_name_from_address(game: str, address: int) -> str | None:
+    for name, platforms in AUDIO_SAMPLE_ADDRESSES.items():
+        if platforms.get(game) == address:
+            return name
+    return None
 #endregion
 
 
 #region YAML Conversion
-def dump_unique_objects_to_yaml(unique_objects: dict, base_path: Path):
+def dump_unique_objects_to_yaml(game: str, unique_objects: dict, base_path: Path):
 
     def dump_category(objects, subfolder: str, serializer, prefix: str):
         out_dir = base_path / subfolder
@@ -629,11 +643,11 @@ def dump_unique_objects_to_yaml(unique_objects: dict, base_path: Path):
             if obj is None:
                 continue
 
-            data = serializer(obj, index=i)
+            data = serializer(game, obj, index=i)
             if data is not None:
                 file_path = out_dir / f'{prefix}_{i}.yaml'
                 with open(file_path, 'w') as f:
-                    yaml.safe_dump(data, f)
+                    yaml.safe_dump(data, f, sort_keys=False)
 
     dump_category(unique_objects.get('instruments', []), 'Instruments', serialize_unique_instrument, 'Instrument')
     dump_category(unique_objects.get('drums', []), 'Drums', serialize_unique_drum, 'Drum')
@@ -689,4 +703,4 @@ if __name__ == '__main__':
         unique_objects = audiobin.collect_unique_objects()
 
         dump_banks_to_yaml(game_code, audiobin, output_root / game_code)
-        dump_unique_objects_to_yaml(unique_objects, output_root / game_code)
+        dump_unique_objects_to_yaml(game_code, unique_objects, output_root / game_code)
