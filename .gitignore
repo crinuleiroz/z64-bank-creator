@@ -185,6 +185,7 @@ pyrightconfig.json
 ### Internal App Data ###
 # Tools
 /Tools/*
+!/Tools/audiobin_to_presets.py
 !/Tools/generate_builtin_preset_hashes.py
 !/Tools/generate_preset_paths.py
 !/Tools/Compile/version.rc
@@ -212,6 +213,9 @@ pyrightconfig.json
 
 # .qrc files
 /App/Resources/resources.qrc
+
+# .audiobin files
+*.audiobin
 
 # End of Internal App Data
 
