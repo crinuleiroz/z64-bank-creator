@@ -158,28 +158,6 @@ class Audiobank:
             addr = int.from_bytes(self.bank_data[addr:addr + 4], 'big')
             instrument = Instrument(self.bank_data, addr) if addr != 0 else None
             self.instruments.append(instrument)
-
-    def __eq__(self, other):
-        if not isinstance(other, Audiobank):
-            return False
-        return (
-            self.game == other.game and
-            self.table_entry == other.table_entry and
-            self.drums == other.drums and
-            self.effects == other.effects and
-            self.instruments == other.instruments and
-            self.bank_data == other.bank_data
-        )
-
-    def __hash__(self):
-        return hash((
-            self.game,
-            self.table_entry,
-            tuple(self.drums),
-            tuple(self.effects),
-            tuple(self.instruments),
-            self.bank_data
-        ))
 #endregion
 
 
@@ -330,7 +308,7 @@ class Sample:
             self.is_cached,
             self.is_relocated,
             self.size,
-            self.vrom_address,
+            # self.vrom_address,
             self.vadpcm_loop.loop_start,
             self.vadpcm_loop.loop_end,
             self.vadpcm_loop.loop_count,
@@ -444,10 +422,10 @@ class Envelope:
 def serialize_envelope(envelope: Envelope, index: int = 0):
     return {
         'name': f'Envelope_{index}',
-        'array': [
+        'array': FlowStyleList([
             val.name if isinstance(val, IntEnum) else val
             for val in envelope.array
-        ]
+        ])
     }
 
 
@@ -473,12 +451,12 @@ def serialize_sample(sample: Sample, index: int = 0, region: str = ''):
         'vadpcm_book': {
             'order': sample.vadpcm_book.order,
             'num_predictors': sample.vadpcm_book.num_predictors,
-            'predictors': sample.vadpcm_book.predictors
+            'predictors': FlowStyleList(sample.vadpcm_book.predictors)
         }
     }
 
     if sample.vadpcm_loop.predictors:
-        dict['vadpcm_loop']['predictors'] = sample.vadpcm_loop.predictors
+        dict['vadpcm_loop']['predictors'] = FlowStyleList(sample.vadpcm_loop.predictors)
 
     return dict
 
@@ -619,6 +597,14 @@ def serialize_unique_effect(effect: Effect, index: int = 0):
 
 
 #region YAML Helpers
+class FlowStyleList(list):
+        pass
+def represent_flow_style_list(dumper, data):
+        return dumper.represent_sequence('tag:yaml.org,2002:seq', data, flow_style=True)
+yaml.representer.Representer.add_representer(FlowStyleList, represent_flow_style_list)
+yaml.representer.SafeRepresenter.add_representer(FlowStyleList, represent_flow_style_list)
+
+
 def skip_bank(game: str, index: int) -> bool:
     if index in {0x00, 0x01, 0x02}:
         return True
