@@ -41,6 +41,48 @@ class Audiobin:
             instrument_bank: Audiobank = Audiobank(game, current_entry, self.audiobank)
             self.audiobank_list.append(instrument_bank)
 
+    def assign_names(self):
+        for i, bank in enumerate(self.audiobank_list):
+            if self.skip_bank(i):
+                continue
+
+            for instrument in bank.instruments:
+                if instrument is None:
+                    continue
+
+                names = []
+
+                for sample_attr in ['prim_sample', 'low_sample', 'high_sample']:
+                    sample_obj = getattr(instrument, sample_attr, None)
+                    if sample_obj is None:
+                        continue
+                    sample = getattr(sample_obj, 'sample', None)
+                    if sample is None:
+                        continue
+                    vrom_address = getattr(sample, 'vrom_address', None)
+                    if vrom_address is None:
+                        continue
+
+                    name = get_sample_name_from_address(self.game, vrom_address)
+                    if name:
+                        names.append(name)
+
+                if not names:
+                    continue
+
+                # Take the first name, split by colon, take first part
+                base_name = names[0].split(':')[0]
+                setattr(instrument, 'name', base_name)
+            for drum in bank.drums:
+                if drum is None:
+                    continue
+                setattr(drum, 'name', get_sample_name_from_address(self.game, drum.drum_sample.sample.vrom_address))
+            for effect in bank.effects:
+                if not effect.effect_sample:
+                    continue
+                setattr(effect, 'name', get_sample_name_from_address(self.game, effect.effect_sample.sample.vrom_address))
+
+
     def skip_bank(self, index: int) -> bool:
         if index in {0x00, 0x01, 0x02}:
             return True
@@ -465,7 +507,10 @@ def serialize_sample(game: str, sample: Sample, index: int = 0, region: str = ''
 
 
 def serialize_instrument(game: str, instrument: Instrument, index: int = 0):
-    name = get_sample_name_from_address(game, instrument.prim_sample.sample.vrom_address)
+    if hasattr(instrument, 'name'):
+        name = instrument.name
+    else:
+        name = get_sample_name_from_address(game, instrument.prim_sample.sample.vrom_address)
     dict = {
         'instrument': {
             'name': name if name is not None else f'Instrument_{index}',
@@ -506,6 +551,7 @@ def serialize_drum(game: str, drum: Drum, index: int = 0):
             'name': name if name is not None else f'Drum_{index}',
             'decay_index': drum.decay_index,
             'pan': drum.pan,
+            'is_relocated': drum.is_relocated,
             'drum_sample': {
                 'sample': serialize_sample(game, drum.drum_sample.sample, index=index),
                 'tuning': drum.drum_sample.tuning
@@ -547,6 +593,8 @@ def serialize_bank(game: str, bank: Audiobank, index: int = 0):
     for i, inst in enumerate(bank.instruments or []):
         if inst is None:
             instrument_data.append(None)
+        elif hasattr(inst, 'name'):
+            instrument_data.append(f'@instrument/{inst.name}')
         else:
             instrument_data.append(serialize_instrument(game, inst, index=i))
 
@@ -700,6 +748,7 @@ if __name__ == '__main__':
             continue
 
         audiobin = load_audiobin_archive(game_code, audiobin_path)
+        audiobin.assign_names()
         unique_objects = audiobin.collect_unique_objects()
 
         dump_banks_to_yaml(game_code, audiobin, output_root / game_code)
