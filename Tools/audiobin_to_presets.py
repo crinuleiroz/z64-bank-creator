@@ -668,7 +668,7 @@ def dump_banks_to_yaml(game: str, audiobin: Audiobin, base_path: Path):
         file_path = out_dir / f'Bank_{i}.yaml'
 
         with open(file_path, 'w') as f:
-            yaml.safe_dump(bank_data, f)
+            yaml.safe_dump(bank_data, f, sort_keys=False)
 #endregion
 
 
