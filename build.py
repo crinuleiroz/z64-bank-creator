@@ -15,7 +15,7 @@ RSRC_QRC_FILE = ROOT_DIR / 'App' / 'Resources' / 'resources.qrc'
 RSRC_PY_FILE = ROOT_DIR / 'App' / 'Common' / 'Resources.py'
 
 # Compile flag
-COMPILE_EXE = True
+COMPILE_EXE = False
 
 # version.res and compile information
 OUTPUT_DIR = ROOT_DIR / 'Tools' / 'Compile'

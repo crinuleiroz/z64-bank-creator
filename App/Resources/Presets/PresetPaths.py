@@ -12,6 +12,12 @@ BANKS_PATHS = [
 
 DRUMKITS_PATHS = [
     ":/assets/presets/drumkits/shared/orchestra.yaml",
+    ":/assets/presets/drumkits/shared/pandeiro_tambourine.yaml",
+    ":/assets/presets/drumkits/shared/conga_cabasa.yaml",
+    ":/assets/presets/drumkits/shared/gong_chimes.yaml",
+    ":/assets/presets/drumkits/oot/trip_hoppin.yaml",
+    ":/assets/presets/drumkits/oot/lute_tambourine.yaml",
+    ":/assets/presets/drumkits/mm/orchestra_partial.yaml",
     ":/assets/presets/drumkits/mm/jazz.yaml",
     ":/assets/presets/drumkits/mm/jazz_alt.yaml",
 ]

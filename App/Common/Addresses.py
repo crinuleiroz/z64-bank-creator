@@ -39,7 +39,7 @@ AUDIO_SAMPLE_ADDRESSES: dict[str, dict[str, int]] = {
     'PIZZ. STRINGS:A070'     : {'OOT': 0x003403F0, 'MM': 0x00442D20},
     'ACOUSTIC BASS:A033'     : {'OOT': 0x00359170, 'MM': 0x004461A0},
     'SYNFANTASIA3:D075'      : {'OOT': 0x003A4410, 'MM': 0x0044A130},
-    'EERIE WIND:F042'        : {'OOT': 0x004006B0, 'MM': 0x004520D0},
+    'EERIE WIND:F042'        : {'OOT': 0x00381930, 'MM': 0x004520D0}, # OOT: 0x004006B0 (AT03 Corrected)
     'SYNTH STRINGS:G067'     : {'OOT': 0x004377E0, 'MM': 0x00478C20},
     'MALE CHOIR:G067'        : {'OOT': 0x002AF020, 'MM': 0x00483620},
     'MALE CHOIR:C109'        : {'OOT': 0x002B43B0, 'MM': 0x004889B0},
@@ -54,9 +54,9 @@ AUDIO_SAMPLE_ADDRESSES: dict[str, dict[str, int]] = {
     'CLARINET:C072'          : {'OOT': 0x00397A60, 'MM': 0x004EC650},
     'BANJO:D050'             : {'OOT': 0x003EDFB0, 'MM': 0x004F3440},
     'BANJO:A057'             : {'OOT': 0x003F0DF0, 'MM': 0x004F6280},
-    'PERC:CONGA:MUTE'        : {'OOT': 0x00445900, 'MM': 0x0053B200},
+    'PERC:CONGA:MUTE'        : {'OOT': 0x00445900, 'MM': 0x004F8B20}, # MM: 0x0053B200 (AT02 Corrected)
     'PERC:CONGA:OPEN'        : {'OOT': 0x003D6860, 'MM': 0x004FADE0},
-    'PERC:CONGA:SLAP'        : {'OOT': 0x00447BC0, 'MM': 0x0053D4C0},
+    'PERC:CONGA:SLAP'        : {'OOT': 0x00447BC0, 'MM': 0x004FD5B0}, # MM: 0x0053D4C0 (AT02 Corrected)
     'CABASA:D123'            : {'OOT': 0x003DBB00, 'MM': 0x00500080},
     'MARIMBA:D062'           : {'OOT': 0x0039FBE0, 'MM': 0x00513220},
     'MARIMBA:D074'           : {'OOT': 0x003A2280, 'MM': 0x005158C0},
@@ -70,7 +70,7 @@ AUDIO_SAMPLE_ADDRESSES: dict[str, dict[str, int]] = {
     'BENT CONGA:C072'        : {'OOT': 0x00427D30, 'MM': 0x00538CC0},
     'CUICA:OPEN'             : {'OOT': 0x0042F000, 'MM': 0x0053FF90},
     'CUICA:MUTE'             : {'OOT': 0x0042F8A0, 'MM': 0x00540830},
-    'REVERB MARIMBA:A057'    : {'OOT': 0x00430360, 'MM': 0x005412F0},
+    'REVERB MARIMBA:A057'    : {'OOT': 0x0037A4B0, 'MM': 0x005412F0}, # OOT: 0x00430360 (AT05 Corrected)
 
     # OOT-Exclusive Samples
     'ANCIENTS:G068'          : {'OOT': 0x0029FE30, 'MM': -1},
