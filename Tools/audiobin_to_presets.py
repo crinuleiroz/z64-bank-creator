@@ -23,7 +23,8 @@ from App.Common.Enums import (
 
 #region Audiobin
 class Audiobin:
-    def __init__(self, _audiobank: bytearray, _audiobank_table: bytearray, _audiosamples: bytearray, _audiosample_table: bytearray):
+    def __init__(self, game: str, _audiobank: bytearray, _audiobank_table: bytearray, _audiosamples: bytearray, _audiosample_table: bytearray):
+        self.game = game
         self.audiobank = _audiobank
         self.audiobank_table = _audiobank_table
         self.audiosamples = _audiosamples
@@ -36,8 +37,69 @@ class Audiobin:
         for i in range(num_banks):
             table_entry = 0x10 + (0x10 * i) # Offset by 16 as the first line is the number of banks
             current_entry = self.audiobank_table[table_entry:table_entry + 0x10]
-            instrument_bank: Audiobank = Audiobank(current_entry, self.audiobank)
+            instrument_bank: Audiobank = Audiobank(game, current_entry, self.audiobank)
             self.audiobank_list.append(instrument_bank)
+
+    def skip_bank(self, index: int) -> bool:
+        if index in {0x00, 0x01, 0x02}:
+            return True
+
+        if self.game == 'OOT' and index == 0x25:
+            return True
+        if self.game == 'MM' and index == 0x28:
+            return True
+
+        return False
+
+    def collect_unique_objects(self):
+        unique_instruments: set[Instrument] = set()
+        unique_drums: set[Drum] = set()
+        unique_effects: set[Effect] = set()
+        unique_samples: set[Sample] = set()
+        unique_envelopes: set[Envelope] = set()
+
+        for i, bank in enumerate(self.audiobank_list):
+            if skip_bank(self.game, i):
+                continue
+
+            for inst in bank.instruments:
+                if inst is None:
+                    continue
+                unique_instruments.add(inst)
+
+                for tuned_sample in [inst.low_sample, inst.prim_sample, inst.high_sample]:
+                    if tuned_sample and tuned_sample.sample:
+                        unique_samples.add(tuned_sample.sample)
+
+                if inst.envelope:
+                    unique_envelopes.add(inst.envelope)
+
+            for drum in bank.drums:
+                if drum is None:
+                    continue
+                unique_drums.add(drum)
+
+                if drum.drum_sample and drum.drum_sample.sample:
+                    unique_samples.add(drum.drum_sample.sample)
+
+                if drum.envelope:
+                    unique_envelopes.add(drum.envelope)
+
+            for effect in bank.effects:
+                if effect is None:
+                    continue
+                unique_effects.add(effect)
+
+                if effect.effect_sample and effect.effect_sample.sample:
+                    unique_samples.add(effect.effect_sample.sample)
+
+        return {
+            'instruments': unique_instruments,
+            'drums': unique_drums,
+            'effects': unique_effects,
+            'samples': unique_samples,
+            'envelopes': unique_envelopes
+        }
 #endregion
 
 
@@ -69,7 +131,8 @@ class TableEntry:
 
 #region Audiobank
 class Audiobank:
-    def __init__(self, table_entry: bytearray, audiobank_file: bytearray):
+    def __init__(self, game: str, table_entry: bytearray, audiobank_file: bytearray):
+        self.game = game
         self.table_entry = TableEntry(table_entry)
         offset = self.table_entry.address
         size = self.table_entry.size
@@ -123,6 +186,18 @@ class Drum:
         self.drum_sample = TunedSample(bank_data, sample_pointer, sample_tuning)
         self.envelope = Envelope(bank_data, envelope_pointer)
 
+    def __hash__(self):
+        return hash((self.decay_index, self.pan, self.drum_sample, self.envelope))
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, Drum)
+            and self.decay_index == other.decay_index
+            and self.pan == other.pan
+            and self.drum_sample == other.drum_sample
+            and self.envelope == other.envelope
+        )
+
 
 class Effect:
     def __init__(self, bank_data, struct_offset: int):
@@ -132,6 +207,12 @@ class Effect:
         ) = unpack('>If', bank_data[struct_offset: struct_offset + 0x08])
 
         self.effect_sample = TunedSample(bank_data, sample_pointer, sample_tuning) if sample_pointer != 0 else None
+
+    def __hash__(self):
+        return hash(self.effect_sample)
+
+    def __eq__(self, other):
+        return isinstance(other, Effect) and self.effect_sample == other.effect_sample
 
 
 class Instrument:
@@ -161,11 +242,40 @@ class Instrument:
         self.prim_sample = TunedSample(bank_data, prim_sample_pointer, prim_sample_tuning) if prim_sample_pointer != 0 else None
         self.high_sample = TunedSample(bank_data, high_sample_pointer, high_sample_tuning) if high_sample_pointer != 0 else None
 
+    def __hash__(self):
+        return hash((
+            self.key_region_low,
+            self.key_region_high,
+            self.decay_index,
+            self.envelope,
+            self.low_sample,
+            self.prim_sample,
+            self.high_sample
+        ))
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, Instrument)
+            and self.key_region_low == other.key_region_low
+            and self.key_region_high == other.key_region_high
+            and self.decay_index == other.decay_index
+            and self.envelope == other.envelope
+            and self.low_sample == other.low_sample
+            and self.prim_sample == other.prim_sample
+            and self.high_sample == other.high_sample
+        )
+
 
 class TunedSample:
     def __init__(self, bank_data: bytearray, sample_pointer, sample_tuning):
         self.sample = Sample(bank_data, sample_pointer) if sample_pointer != 0 else None
         self.tuning = sample_tuning if self.sample else 0.0
+
+    def __hash__(self):
+        return hash((self.sample, self.tuning))
+
+    def __eq__(self, other):
+        return isinstance(other, TunedSample) and self.sample == other.sample and self.tuning == other.tuning
 
 
 class Sample:
@@ -193,6 +303,28 @@ class Sample:
 
         self.vadpcm_loop = VadpcmLoop(bank_data, self.vadpcmloop_pointer)
         self.vadpcm_book = VadpcmBook(bank_data, self.vadpcmbook_pointer)
+
+    def __hash__(self):
+        return hash((
+            self.unk_0,
+            self.codec,
+            self.medium,
+            self.is_cached,
+            self.is_relocated,
+            self.size,
+            self.vrom_address,
+            self.vadpcm_loop.loop_start,
+            self.vadpcm_loop.loop_end,
+            self.vadpcm_loop.loop_count,
+            self.vadpcm_loop.num_samples,
+            tuple(self.vadpcm_loop.predictors or []),
+            self.vadpcm_book.order,
+            self.vadpcm_book.num_predictors,
+            tuple(self.vadpcm_book.predictors)
+        ))
+
+    def __eq__(self, other):
+        return isinstance(other, Sample) and hash(self) == hash(other)
 
 
 class VadpcmLoop:
@@ -246,6 +378,12 @@ class Envelope:
 
             self.array.append(t)
             self.array.append(v)
+
+    def __hash__(self):
+        return hash(tuple(self.array))
+
+    def __eq__(self, other):
+        return isinstance(other, Envelope) and self.array == other.array
 #endregion
 
 
@@ -260,12 +398,12 @@ def serialize_envelope(envelope: Envelope, index: int = 0):
     }
 
 
-def serialize_sample(sample: Sample, index: int = 0, region: str = 'Prim'):
+def serialize_sample(sample: Sample, index: int = 0, region: str = ''):
     if sample is None:
         return None
 
     dict = {
-        'name': f'Sample_{index}_{region}',
+        'name': f'Sample_{index}_{region}' if region else f'Sample_{index}',
         'unk_0': sample.unk_0,
         'codec': sample.codec.name,
         'medium': sample.medium.name,
@@ -324,39 +462,165 @@ def serialize_instrument(instrument: Instrument, index: int = 0):
         }
 
     return dict
+
+
+def serialize_drum(drum: Drum, index: int = 0):
+    return {
+        'drum': {
+            'name': f'Drum_{index}',
+            'decay_index': drum.decay_index,
+            'pan': drum.pan,
+            'drum_sample': {
+                'sample': serialize_sample(drum.drum_sample.sample, index=index),
+                'tuning': drum.drum_sample.tuning
+            },
+            'envelope': serialize_envelope(drum.envelope, index=index)
+        }
+    }
+
+
+def serialize_effect(effect: Effect, index: int = 0):
+    if effect and effect.effect_sample is None:
+        return None
+
+    return {
+        'effect': {
+            'name': f'Effect_{index}',
+            'effect_sample': {
+                'sample': serialize_sample(effect.effect_sample.sample, index=index),
+                'tuning': effect.effect_sample.tuning
+            }
+        }
+    }
+
+
+def serialize_bank(game: str, bank: Audiobank, index: int = 0):
+    table_entry_dict = {
+        'storage_medium': bank.table_entry.storage_medium,
+        'cache_load_type': bank.table_entry.cache_load_type,
+        'sample_bank_id_1': bank.table_entry.sample_bank_id_1,
+        'sample_bank_id_2': bank.table_entry.sample_bank_id_2,
+        'num_instruments': bank.table_entry.num_instruments,
+        'num_drums': bank.table_entry.num_drums,
+        'num_effects': bank.table_entry.num_effects
+    }
+
+    instrument_data = []
+    for i, inst in enumerate(bank.instruments or []):
+        if inst is None:
+            instrument_data.append(None)
+        else:
+            instrument_data.append(serialize_instrument(inst, index=i))
+
+    drum_data = []
+    for i, drum in enumerate(bank.drums or []):
+        if drum is None:
+            drum_data.append(None)
+        else:
+            drum_data.append(serialize_drum(drum, index=i))
+
+    effect_data = []
+    for i, effect in enumerate(bank.effects or []):
+        if effect is None:
+            effect_data.append(None)
+        else:
+            effect_data.append(serialize_effect(effect, index=i))
+
+    bank_dict = {
+        'bank': {
+            'name': f'BANK_{index}',
+            'game': game,
+            'table_entry': table_entry_dict,
+        }
+    }
+
+    if instrument_data:
+        bank_dict['bank']['instruments'] = instrument_data
+    if drum_data:
+        bank_dict['bank']['drums'] = drum_data
+    if effect_data:
+        bank_dict['bank']['effects'] = effect_data
+
+    return bank_dict
+
+
+def serialize_unique_envelope(envelope: Envelope, index: int = 0):
+    return { 'envelope': serialize_envelope(envelope, index) }
+
+
+def serialize_unique_sample(sample: Sample, index: int = 0):
+    return { 'sample': serialize_sample(sample, index) }
+
+
+def serialize_unique_instrument(instrument: Instrument, index: int = 0):
+    return serialize_instrument(instrument, index)
+
+
+def serialize_unique_drum(drum: Drum, index: int = 0):
+    return serialize_drum(drum, index)
+
+
+def serialize_unique_effect(effect: Effect, index: int = 0):
+    return serialize_effect(effect, index)
 #endregion
 
 
 #region YAML Helpers
-def enum_representer(dumper, data):
-    return dumper.represent_scalar('tag:yaml.org,2002:str', data.name)
-yaml.add_representer(IntEnum, enum_representer)
+def skip_bank(game: str, index: int) -> bool:
+    if index in {0x00, 0x01, 0x02}:
+        return True
+
+    if game == 'OOT' and index == 0x25:
+        return True
+    if game == 'MM' and index == 0x28:
+        return True
+
+    return False
 #endregion
 
 
 #region YAML Conversion
-def dump_instruments_to_yaml(audiobin: Audiobin, output_path: str):
-    base = Path(output_path)
-    base.mkdir(exist_ok=True)
+def dump_unique_objects_to_yaml(unique_objects: dict, base_path: Path):
 
-    for i, bank in enumerate(audiobin.audiobank_list):
-        bank_path = base / f'BANK_{i}' / 'Instruments'
-        bank_path.mkdir(parents=True, exist_ok=True)
+    def dump_category(objects, subfolder: str, serializer, prefix: str):
+        out_dir = base_path / subfolder
+        out_dir.mkdir(parents=True, exist_ok=True)
 
-        for j, inst in enumerate(bank.instruments):
-            if inst is None:
+        for i, obj in enumerate(objects):
+            if obj is None:
                 continue
 
-            instrument_dict = serialize_instrument(inst, index=j)
+            data = serializer(obj, index=i)
+            if data is not None:
+                file_path = out_dir / f'{prefix}_{i}.yaml'
+                with open(file_path, 'w') as f:
+                    yaml.safe_dump(data, f)
 
-            yaml_path = bank_path / f'INSTRUMENT_{j}.yaml'
-            with open(yaml_path, 'w') as f:
-                yaml.safe_dump(instrument_dict, f, sort_keys=False)
+    dump_category(unique_objects.get('instruments', []), 'Instruments', serialize_unique_instrument, 'Instrument')
+    dump_category(unique_objects.get('drums', []), 'Drums', serialize_unique_drum, 'Drum')
+    dump_category(unique_objects.get('effects', []), 'Effects', serialize_unique_effect, 'Effect')
+    dump_category(unique_objects.get('samples', []), 'Samples', serialize_unique_sample, 'Sample')
+    dump_category(unique_objects.get('envelopes', []), 'Envelopes', serialize_unique_envelope, 'Envelope')
+
+
+def dump_banks_to_yaml(game: str, audiobin: Audiobin, base_path: Path):
+    out_dir = base_path / 'Banks'
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    for i, bank in enumerate(audiobin.audiobank_list):
+        if audiobin.skip_bank(i):
+            continue
+
+        bank_data = serialize_bank(game, bank, index=i)
+        file_path = out_dir / f'Bank_{i}.yaml'
+
+        with open(file_path, 'w') as f:
+            yaml.safe_dump(bank_data, f)
 #endregion
 
 
-#region Output
-def load_audiobin_archive(archive_path: Path) -> Audiobin:
+#region Audiobin
+def load_audiobin_archive(game: str, archive_path: Path) -> Audiobin:
     with zipfile.ZipFile(archive_path, 'r') as z_ref:
         audiobank = bytearray(z_ref.read('Audiobank'))
         audiobank_index = bytearray(z_ref.read('Audiobank_index'))
@@ -364,6 +628,7 @@ def load_audiobin_archive(archive_path: Path) -> Audiobin:
         audiotable_index = bytearray(z_ref.read('Audiotable_index'))
 
     return Audiobin(
+        game,
         audiobank,
         audiobank_index,
         audiotable,
@@ -373,9 +638,19 @@ def load_audiobin_archive(archive_path: Path) -> Audiobin:
 
 if __name__ == '__main__':
     script_dir = Path(__file__).resolve().parent
-    oot_audiobin = script_dir / 'Audio Binary' / 'OOT.audiobin'
-    mm_audiobin = script_dir / 'Audio Binary' / 'MM.audiobin'
+    audiobin_dir = script_dir / 'Audio Binary'
+    output_root = script_dir / 'Raw Presets'
 
-    if oot_audiobin.exists():
-        oot_audio_data = load_audiobin_archive(oot_audiobin)
-        dump_instruments_to_yaml(oot_audio_data, output_path=script_dir / 'Raw Presets' / 'OOT')
+    for game_code, filename in [('OOT', 'OOT.audiobin'), ('MM', 'MM.audiobin')]:
+        audiobin_path = audiobin_dir / filename
+        if not audiobin_path.exists():
+            continue
+
+        if game_code == 'MM':
+            continue
+
+        audiobin = load_audiobin_archive(game_code, audiobin_path)
+        unique_objects = audiobin.collect_unique_objects()
+
+        dump_banks_to_yaml(game_code, audiobin, output_root / game_code)
+        dump_unique_objects_to_yaml(unique_objects, output_root / game_code)
