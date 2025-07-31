@@ -646,9 +646,6 @@ if __name__ == '__main__':
         if not audiobin_path.exists():
             continue
 
-        if game_code == 'MM':
-            continue
-
         audiobin = load_audiobin_archive(game_code, audiobin_path)
         unique_objects = audiobin.collect_unique_objects()
 
