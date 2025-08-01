@@ -50,6 +50,7 @@ AUDIO_SAMPLE_ADDRESSES: dict[str, dict[str, int]] = {
     'DJEMBE:MUTE'            : {'OOT': 0x003B6B40, 'MM': 0x004C0DA0},
     'GONG:G068'              : {'OOT': 0x003B7A60, 'MM': 0x004C1CC0}, # OOT: 0x0044A690 (AT06 Corrected)
     'BAR CHIMES:D123'        : {'OOT': 0x003C1F90, 'MM': 0x004CC1F0}, # OOT: 0x00454BC0 (AT06 Corrected)
+    'BENT CONGA:C072'        : {'OOT': 0x003C7A90, 'MM': 0x004D1CF0}, # OOT: 0x00427D30 (AT05 Corrected), MM: 0x00538CC0 (AT02 Corrected)
     'HARPSICHORD:G067'       : {'OOT': 0x00398650, 'MM': 0x004DEB10},
     'CLARINET:C072'          : {'OOT': 0x00397A60, 'MM': 0x004EC650},
     'BANJO:D050'             : {'OOT': 0x003EDFB0, 'MM': 0x004F3440},
@@ -68,7 +69,6 @@ AUDIO_SAMPLE_ADDRESSES: dict[str, dict[str, int]] = {
     'STEEL DRUM:C060'        : {'OOT': 0x003F3690, 'MM': 0x00522F10},
     'STEEL DRUM:D074'        : {'OOT': 0x003F82F0, 'MM': 0x00527B70},
     'DIGI PAD 04:F065'       : {'OOT': 0x003CB570, 'MM': 0x0052A260}, # OOT: 0x0045A6C0 (AT06 Corrected)
-    'BENT CONGA:C072'        : {'OOT': 0x003C7A90, 'MM': 0x00538CC0}, # OOT: 0x00427D30 (AT05 Corrected)
     'CUICA:OPEN'             : {'OOT': 0x003ECC50, 'MM': 0x0053FF90}, # OOT: 0x0042F000 (AT05 Corrected)
     'CUICA:MUTE'             : {'OOT': 0x003ED4F0, 'MM': 0x00540830}, # OOT: 0x0042F8A0 (AT05 Corrected)
     'REVERB MARIMBA:A057'    : {'OOT': 0x0037A4B0, 'MM': 0x005412F0}, # OOT: 0x00430360 (AT05 Corrected)

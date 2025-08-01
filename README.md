@@ -61,7 +61,7 @@ A python-based Zelda64 instrument bank creator, editor, and compiler with a flue
 - [ ] Add drumkits page where users can create, modify, export, and delete drumkit presets
 - [ ] Add pop-up if the app encounters and error
 ### Internal App Data
-- [ ] Implement built-in instrument presets (Majora's Mask done)
+- [x] Implement built-in instrument presets
 - [ ] Implement built-in drum presets
 - [ ] Implement built-in effect presets (Unlikely to ever be done)
 - [x] Implement built-in sample presets (Bank 0x03–0x24/0x27 done)

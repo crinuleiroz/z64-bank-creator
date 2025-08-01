@@ -50,25 +50,25 @@ class PresetStoreBase:
 
     # Name getters
     def get_instrument_by_name(self, name: str) -> Instrument | None:
-        return next((i for i in self.instruments.values() if i.name == name), None)
+        return next((i for i in self.instruments.values() if i.name.lower() == name.lower()), None)
 
     def get_drum_by_name(self, name: str) -> Drum | None:
-        return next((d for d in self.drums.values() if d.name == name), None)
+        return next((d for d in self.drums.values() if d.name.lower() == name.lower()), None)
 
     def get_effect_by_name(self, name: str) -> Effect | None:
-        return next((e for e in self.effects.values() if e.name == name), None)
+        return next((e for e in self.effects.values() if e.name.lower() == name.lower()), None)
 
     def get_sample_by_name(self, name: str) -> Sample | None:
-        return next((s for s in self.samples.values() if s.name == name), None)
+        return next((s for s in self.samples.values() if s.name.lower() == name.lower()), None)
 
     def get_envelope_by_name(self, name: str) -> Envelope | None:
-        return next((e for e in self.envelopes.values() if e.name == name), None)
+        return next((e for e in self.envelopes.values() if e.name.lower() == name.lower()), None)
 
     def get_drumkit_by_name(self, name: str) -> list[Drum] | None:
-        return next((dk for dk in self.drumkits.values() if dk.name == name), None)
+        return next((dk for dk in self.drumkits.values() if dk.name.lower() == name.lower()), None)
 
     def get_bank_by_name(self, name: str) -> Audiobank | None:
-        return next((b for b in self.banks.values() if b.name == name), None)
+        return next((b for b in self.banks.values() if b.name.lower() == name.lower()), None)
 
     # Id getters
     def get_instrument(self, key: int):

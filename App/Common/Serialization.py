@@ -146,7 +146,7 @@ def parse_reference(ref: str) -> tuple[str, str]:
         raise ValueError(f"Malformed reference string: '{ref}'")
     _, remainder = ref.split('@', 1)
     type_, name = remainder.split('/', 1)
-    return type_.lower(), name
+    return type_.lower(), name.lower()
 
 
 def resolve_reference(ref: str):
