@@ -89,7 +89,7 @@ class Config(QConfig, QObject):
             self.outputFolderChanged.emit(value)
 
 
-APP_VERSION = '0.1.0' # Major.Minor.Patch
+APP_VERSION = '0.8.0' # Major.Minor.Patch
 
 cfg = Config()
 # cfg.themeMode.value = Theme.AUTO
