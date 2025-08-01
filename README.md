@@ -64,9 +64,9 @@ A python-based Zelda64 instrument bank creator, editor, and compiler with a flue
 - [x] Implement built-in instrument presets
 - [ ] Implement built-in drum presets
 - [ ] Implement built-in effect presets (Unlikely to ever be done)
-- [x] Implement built-in sample presets (Bank 0x03–0x24/0x27 done)
+- [x] Implement built-in sample presets (Bank 0x03–0x24/0x27 only)
 - [x] Implement built-in envelope presets
-- [ ] Implement built-in instrument bank presets
+- [x] Implement built-in instrument bank presets (Bank 0x03–0x24/0x27 only)
 - [x] Implement built-in drumkit presets
 - [x] Add handling for built-in sample preset VROM addresses
 
