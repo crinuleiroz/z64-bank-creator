@@ -70,7 +70,7 @@ def generate_preset_paths_file(qrc_path: str, output_path: str):
     paths_by_cat = extract_paths_by_category(qrc_path)
 
     lines = [
-        '# Auto-generated hash map of builtin presets',
+        '# Auto-generated resource paths of builtin presets',
         '# Do not edit manually. Regenerate using generate_preset_paths.py',
         ''
     ]

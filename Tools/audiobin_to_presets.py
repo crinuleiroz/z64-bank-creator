@@ -427,12 +427,11 @@ class VadpcmBook:
         ) = unpack('>2i', bank_data[struct_offset: struct_offset + 0x08])
 
         num_p = 8 * self.order * self.num_predictors
-        num_s16 = num_p // 2
 
         start = struct_offset + 0x08
-        end = start + num_p
+        end = start + (num_p * 2)
 
-        self.predictors = list(unpack(f'>{num_s16}h', bank_data[start:end]))
+        self.predictors = list(unpack(f'>{num_p}h', bank_data[start:end]))
 
 
 class Envelope:
@@ -736,6 +735,7 @@ def load_audiobin_archive(game: str, archive_path: Path) -> Audiobin:
         audiotable_index
     )
 #endregion
+
 
 if __name__ == '__main__':
     script_dir = Path(__file__).resolve().parent

@@ -1,5 +1,6 @@
 # App/Common/Addresses.py
 
+# All addresses are corrected to use AT00 or AT01
 AUDIO_SAMPLE_ADDRESSES: dict[str, dict[str, int]] = {
     # Shared Samples
     'OCARINA:G080'           : {'OOT': 0x000FAD40, 'MM': 0x002786B0},
@@ -39,8 +40,7 @@ AUDIO_SAMPLE_ADDRESSES: dict[str, dict[str, int]] = {
     'PIZZ. STRINGS:A070'     : {'OOT': 0x003403F0, 'MM': 0x00442D20},
     'ACOUSTIC BASS:A033'     : {'OOT': 0x00359170, 'MM': 0x004461A0},
     'SYNFANTASIA3:D075'      : {'OOT': 0x003A4410, 'MM': 0x0044A130},
-    'EERIE WIND:F042'        : {'OOT': 0x00381930, 'MM': 0x004520D0}, # OOT: 0x004006B0 (AT03 Corrected)
-    'SYNTH STRINGS:G067'     : {'OOT': 0x004377E0, 'MM': 0x00478C20},
+    'EERIE WIND:F042'        : {'OOT': 0x00381930, 'MM': 0x004520D0},
     'MALE CHOIR:G067'        : {'OOT': 0x002AF020, 'MM': 0x00483620},
     'MALE CHOIR:C109'        : {'OOT': 0x002B43B0, 'MM': 0x004889B0},
     'BOUZOUKI:D050'          : {'OOT': 0x003AC3B0, 'MM': 0x004B6610},
@@ -48,16 +48,17 @@ AUDIO_SAMPLE_ADDRESSES: dict[str, dict[str, int]] = {
     'DJEMBE:OPEN'            : {'OOT': 0x003B4330, 'MM': 0x004BE590},
     'DJEMBE:SLAP'            : {'OOT': 0x003B5350, 'MM': 0x004BF5B0},
     'DJEMBE:MUTE'            : {'OOT': 0x003B6B40, 'MM': 0x004C0DA0},
-    'GONG:G068'              : {'OOT': 0x0044A690, 'MM': 0x004C1CC0},
-    'BAR CHIMES:D123'        : {'OOT': 0x00454BC0, 'MM': 0x004CC1F0},
+    'GONG:G068'              : {'OOT': 0x003B7A60, 'MM': 0x004C1CC0}, # OOT: 0x0044A690 (AT06 Corrected)
+    'BAR CHIMES:D123'        : {'OOT': 0x003C1F90, 'MM': 0x004CC1F0}, # OOT: 0x00454BC0 (AT06 Corrected)
     'HARPSICHORD:G067'       : {'OOT': 0x00398650, 'MM': 0x004DEB10},
     'CLARINET:C072'          : {'OOT': 0x00397A60, 'MM': 0x004EC650},
     'BANJO:D050'             : {'OOT': 0x003EDFB0, 'MM': 0x004F3440},
     'BANJO:A057'             : {'OOT': 0x003F0DF0, 'MM': 0x004F6280},
-    'PERC:CONGA:MUTE'        : {'OOT': 0x00445900, 'MM': 0x004F8B20}, # MM: 0x0053B200 (AT02 Corrected)
+    'PERC:CONGA:MUTE'        : {'OOT': 0x003D45A0, 'MM': 0x004F8B20}, # OOT: 0x0042A270 (AT05 Corrected), MM: 0x0053B200 (AT02 Corrected)
     'PERC:CONGA:OPEN'        : {'OOT': 0x003D6860, 'MM': 0x004FADE0},
-    'PERC:CONGA:SLAP'        : {'OOT': 0x00447BC0, 'MM': 0x004FD5B0}, # MM: 0x0053D4C0 (AT02 Corrected)
+    'PERC:CONGA:SLAP'        : {'OOT': 0x003D9030, 'MM': 0x004FD5B0}, # OOT: 0x0042C530 (AT05 Corrected), MM: 0x0053D4C0 (AT02 Corrected)
     'CABASA:D123'            : {'OOT': 0x003DBB00, 'MM': 0x00500080},
+    'COWBELL:E076'           : {'OOT': 0x003DCA50, 'MM': 0x00500FD0},
     'MARIMBA:D062'           : {'OOT': 0x0039FBE0, 'MM': 0x00513220},
     'MARIMBA:D074'           : {'OOT': 0x003A2280, 'MM': 0x005158C0},
     'SUSTAIN E. GUITAR:A045' : {'OOT': 0x003DD710, 'MM': 0x00517A50},
@@ -66,16 +67,17 @@ AUDIO_SAMPLE_ADDRESSES: dict[str, dict[str, int]] = {
     'CHURCH BELL:A070'       : {'OOT': 0x003E8000, 'MM': 0x0051E2C0},
     'STEEL DRUM:C060'        : {'OOT': 0x003F3690, 'MM': 0x00522F10},
     'STEEL DRUM:D074'        : {'OOT': 0x003F82F0, 'MM': 0x00527B70},
-    'DIGI PAD 04:F065'       : {'OOT': 0x0045A6C0, 'MM': 0x0052A260},
-    'BENT CONGA:C072'        : {'OOT': 0x00427D30, 'MM': 0x00538CC0},
-    'CUICA:OPEN'             : {'OOT': 0x0042F000, 'MM': 0x0053FF90},
-    'CUICA:MUTE'             : {'OOT': 0x0042F8A0, 'MM': 0x00540830},
+    'DIGI PAD 04:F065'       : {'OOT': 0x003CB570, 'MM': 0x0052A260}, # OOT: 0x0045A6C0 (AT06 Corrected)
+    'BENT CONGA:C072'        : {'OOT': 0x003C7A90, 'MM': 0x00538CC0}, # OOT: 0x00427D30 (AT05 Corrected)
+    'CUICA:OPEN'             : {'OOT': 0x003ECC50, 'MM': 0x0053FF90}, # OOT: 0x0042F000 (AT05 Corrected)
+    'CUICA:MUTE'             : {'OOT': 0x003ED4F0, 'MM': 0x00540830}, # OOT: 0x0042F8A0 (AT05 Corrected)
     'REVERB MARIMBA:A057'    : {'OOT': 0x0037A4B0, 'MM': 0x005412F0}, # OOT: 0x00430360 (AT05 Corrected)
 
     # OOT-Exclusive Samples
-    'ANCIENTS:G068'          : {'OOT': 0x0029FE30, 'MM': -1},
+    'ANCIENTS-R:G068'        : {'OOT': 0x0029FE30, 'MM': -1}, # Dodongo's Cavern & Shadow Temple
     'LORE DRONE:A069'        : {'OOT': 0x002A4D40, 'MM': -1},
     'SHINE:E088'             : {'OOT': 0x002A8500, 'MM': -1},
+    'SPACEOSPHERE:G091'      : {'OOT': 0x002B9E60, 'MM': -1},
     'METAL GRIND:C060'       : {'OOT': 0x002F8690, 'MM': -1},
     'PIPE ORGAN:C048'        : {'OOT': 0x00343870, 'MM': -1},
     'PIPE ORGAN:C060'        : {'OOT': 0x0034D670, 'MM': -1},
@@ -91,9 +93,11 @@ AUDIO_SAMPLE_ADDRESSES: dict[str, dict[str, int]] = {
     'AFRIK FLUTE7:PRIM'      : {'OOT': 0x003D2840, 'MM': -1},
     'AFRIK FLUTE7:HIGH'      : {'OOT': 0x003D37A0, 'MM': -1},
     'ENIGMATIC:F054'         : {'OOT': 0x003FA9E0, 'MM': -1},
+    'ANCIENTS-L:B047'        : {'OOT': 0x004006B0, 'MM': -1}, # Jabu-Jabu's Belly (Near perfect waveform match)
     'TRIP-HOPPIN:KICK'       : {'OOT': 0x00409270, 'MM': -1},
     'TRIP-HOPPIN:SNRE'       : {'OOT': 0x0040AC40, 'MM': -1},
     'CRUNCH ROAR:C060'       : {'OOT': 0x00416B30, 'MM': -1},
+    'SYNTH STRINGS:C060'     : {'OOT': 0x004377E0, 'MM': -1}, # OOT: 0x0040BA60 (AT03 Corrected), 0x004377E0 (AT06 Corrected); same os MM except root and VADPCM info
     'DUDUK:D086'             : {'OOT': 0x004428B0, 'MM': -1},
 
     # MM-Exclusive Samples
@@ -121,6 +125,7 @@ AUDIO_SAMPLE_ADDRESSES: dict[str, dict[str, int]] = {
     'PIT HIT 1:D038'         : {'OOT': -1,         'MM': 0x0046E340},
     'MUTED E. GUITAR:E052'   : {'OOT': -1,         'MM': 0x004728F0},
     'DANGER:F066'            : {'OOT': -1,         'MM': 0x00473E10},
+    'SYNTH STRINGS:G067'     : {'OOT': -1,         'MM': 0x00478C20}, # Same as OOT except root and VADPCM info
     'ELECTRIC ORGAN:G068'    : {'OOT': -1,         'MM': 0x00480600},
     'UDU:D038'               : {'OOT': -1,         'MM': 0x0048E460},
     'UDU:A046'               : {'OOT': -1,         'MM': 0x00491090},
@@ -141,7 +146,6 @@ AUDIO_SAMPLE_ADDRESSES: dict[str, dict[str, int]] = {
     'ELVES:C096'             : {'OOT': -1,         'MM': 0x004E65F0},
     'SHEHNAI:A057'           : {'OOT': -1,         'MM': 0x004ED240},
     'SITAR:A057'             : {'OOT': -1,         'MM': 0x004EF640},
-    'COWBELL:E076'           : {'OOT': -1,         'MM': 0x00500FD0},
     'JP CYMBAL:LOW'          : {'OOT': -1,         'MM': 0x00501C90},
     'JP CYMBAL:HIGH'         : {'OOT': -1,         'MM': 0x0050AA40},
 }
