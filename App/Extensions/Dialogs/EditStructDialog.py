@@ -30,7 +30,7 @@ class EditStructDialog(MessageBoxBase):
         self.viewLayout.addWidget(self.titleLabel)
         self.viewLayout.addWidget(self.form)
         self.widget.setMinimumWidth(540)
-        self.widget.setMinimumHeight(540)
+        # self.widget.setMinimumHeight(540)
 
         self.yesButton.setText('Apply')
 

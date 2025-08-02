@@ -57,9 +57,8 @@ class StructsViewModel(object):
         # Signals
         self._connectSignals()
 
-        # Load user presets and refresh list
-        # self._loadAllPresets()
-        self._refreshListView()
+        # Refresh presets
+        self.refresh()
 
     def _setupCommandBarActions(self):
         self.createPreset = Action(icon=FICO.ADD, text='Create', triggered=self._showNewPresetMenu)
@@ -128,11 +127,11 @@ class StructsViewModel(object):
 
     def _setupPivotActions(self):
         self.pivotItems = [
-            ('instrumentsInterface', 'Instruments', self._clearListSelection),
-            ('drumsInterface', 'Drums', self._clearListSelection),
-            ('effectsInterface', 'Effects', self._clearListSelection),
-            ('samplesInterface', 'Samples', self._clearListSelection),
-            ('envelopesInterface', 'Envelopes', self._clearListSelection),
+            ('instrumentsInterface', 'Instruments', self._clearPresetSelection),
+            ('drumsInterface', 'Drums', self._clearPresetSelection),
+            ('effectsInterface', 'Effects', self._clearPresetSelection),
+            ('samplesInterface', 'Samples', self._clearPresetSelection),
+            ('envelopesInterface', 'Envelopes', self._clearPresetSelection),
         ]
 
         for routeKey, text, callback in self.pivotItems:
@@ -156,7 +155,7 @@ class StructsViewModel(object):
             'Ctrl+S': self._onExportPreset,
             'Ctrl+Z': self.undoStack.undo,
             'Ctrl+Y': self.undoStack.redo,
-            'Ctrl+D': self._clearListSelection,
+            'Ctrl+D': self._clearPresetSelection,
             'Del': self._onDeletePreset,
         }
 
@@ -173,11 +172,11 @@ class StructsViewModel(object):
 
         self.pivot.currentItemChanged.connect(self._onTabChanged)
         self.listView.itemSelectionChanged.connect(self._onSelectionChanged)
-        self.listView.customContextMenuRequested.connect(self._onListContextMenu)
+        self.listView.customContextMenuRequested.connect(self._onPresetContextMenu)
     #endregion
 
     #region List Handling
-    def _clearListSelection(self):
+    def _clearPresetSelection(self):
         self.selectedItems = []
         self.selectedPresets = []
 
@@ -210,7 +209,7 @@ class StructsViewModel(object):
         }
         self.currentPresetType = types.get(value)
         self._refreshListView()
-        self._clearListSelection()
+        self._clearPresetSelection()
 
         # Recreate edit menu
         self._setupEditPresetMenu()
@@ -273,7 +272,7 @@ class StructsViewModel(object):
             newPreset = presetRegistry.get_or_register(newPreset)
             cmd = CreatePresetCommand(self, newPreset, f'Create {self.currentPresetType[:-1]}')
             self.undoStack.push(cmd)
-            self._clearListSelection()
+            self._clearPresetSelection()
 
             # Select newly created item
             for i in range(self.listView.count()):
@@ -327,7 +326,7 @@ class StructsViewModel(object):
             f'Delete {len(self.selectedPresets)} {self.currentPresetType[:-1]}'
         )
         self.undoStack.push(cmd)
-        self._clearListSelection()
+        self._clearPresetSelection()
 
     def _onCopyPreset(self):
         if not self.selectedItems and not self.selectedPresets:
@@ -369,7 +368,7 @@ class StructsViewModel(object):
     #endregion
 
     #region Menus
-    def _onListContextMenu(self, pos):
+    def _onPresetContextMenu(self, pos):
         clickedItem = self.listView.itemAt(pos)
         if clickedItem and clickedItem not in self.selectedItems:
             self.listView.setCurrentItem(clickedItem)
@@ -460,7 +459,7 @@ class StructsViewModel(object):
             self.undoStack.push(cmd)
             self.editedPresets.add(id(editedPreset))
             self._refreshListView()
-            self._clearListSelection()
+            self._clearPresetSelection()
     #endregion
 
     #region Tooltips
@@ -483,3 +482,6 @@ class StructsViewModel(object):
 
     def onThemeChanged(self):
         self._updateCommandBarButtonState()
+
+    def refresh(self):
+        self._refreshListView()

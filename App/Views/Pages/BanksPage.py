@@ -1,12 +1,15 @@
 # App/Views/Pages/BanksPage.py
 
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QAbstractItemView
+from PySide6.QtCore import Qt, QSortFilterProxyModel
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QAbstractItemView, QHeaderView
 
-from qfluentwidgets import TitleLabel, CommandBar, ListWidget, ScrollArea
+from qfluentwidgets import TitleLabel, CommandBar, TableView, ScrollArea
 
 # App/Extensions
 from App.Extensions.Widgets.Frame import Frame
+
+# App/Models
+from App.Models.BankPresetTableModel import BankPresetTableModel
 
 # App/ViewModels
 from App.ViewModels.Pages.BanksViewModel import BanksViewModel
@@ -27,7 +30,7 @@ class BanksPage(QWidget):
 
         # ViewModel
         self.viewModel = BanksViewModel()
-        self.viewModel.initPage(self.listView, self.commandBar, self)
+        self.viewModel.initPage(self.tableWidget, self.commandBar, self)
 
     #region Initialization
     def _initHeader(self):
@@ -61,11 +64,31 @@ class BanksPage(QWidget):
         self.scrollLayout.setSpacing(8)
 
         self.listFrame = Frame(self.scrollWidget)
-        self.listView = ListWidget(self.listFrame)
-        self.listView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.listView.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.tableWidget = TableView(self.listFrame)
+        self.tableWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.tableWidget.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.tableWidget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.tableWidget.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
 
-        self.listFrame.addWidget(self.listView)
+        self.tableWidget.setAlternatingRowColors(False)
+        self.tableWidget.setSortingEnabled(True)
+        self.tableWidget.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget.verticalHeader().setVisible(False)
+
+        self.tableModel = BankPresetTableModel([])
+        self.tableProxy = QSortFilterProxyModel(self)
+        self.tableProxy.setSourceModel(self.tableModel)
+        self.tableProxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+
+        self.tableWidget.setModel(self.tableProxy)
+        header = self.tableWidget.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
+        header.setSectionsMovable(False)
+        header.setStretchLastSection(True)
+
+        self.tableWidget.setColumnWidth(0, 200)
+
+        self.listFrame.addWidget(self.tableWidget)
         self.scrollLayout.addWidget(self.listFrame)
 
         self.scrollArea.setWidgetResizable(True)
@@ -84,4 +107,4 @@ class BanksPage(QWidget):
 
     def showEvent(self, event):
         super().showEvent(event)
-        self.viewModel._clearListSelection()
+        self.viewModel._clearPresetSelection()

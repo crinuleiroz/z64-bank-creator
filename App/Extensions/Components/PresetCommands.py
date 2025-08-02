@@ -19,13 +19,13 @@ class CreatePresetCommand(QUndoCommand):
 
     def undo(self):
         self.viewModel.userPresets.remove_preset(self.preset)
-        self.viewModel._refreshListView()
-        self.viewModel._clearListSelection()
+        self.viewModel.refresh()
+        self.viewModel._clearPresetSelection()
 
     def redo(self):
         self.viewModel.userPresets.add_preset(self.preset)
-        self.viewModel._refreshListView()
-        self.viewModel._clearListSelection()
+        self.viewModel.refresh()
+        self.viewModel._clearPresetSelection()
 #endregion
 
 
@@ -40,13 +40,13 @@ class EditBankTableEntryCommand(QUndoCommand):
 
     def undo(self):
         self.preset.tableEntry = self.oldEntry
-        self.viewModel._refreshListView()
-        # self.viewModel._clearListSelection()
+        self.viewModel.refresh()
+        # self.viewModel._clearPresetSelection()
 
     def redo(self):
         self.preset.tableEntry = self.newEntry
-        self.viewModel._refreshListView()
-        # self.viewModel._clearListSelection()
+        self.viewModel.refresh()
+        # self.viewModel._clearPresetSelection()
 #endregion
 
 
@@ -62,13 +62,13 @@ class EditBankListCommand(QUndoCommand):
 
     def undo(self):
         setattr(self.preset, self.listType, self.oldList)
-        self.viewModel._refreshListView()
-        # self.viewModel._clearListSelection()
+        self.viewModel.refresh()
+        # self.viewModel._clearPresetSelection()
 
     def redo(self):
         setattr(self.preset, self.listType, self.newList)
-        self.viewModel._refreshListView()
-        # self.viewModel._clearListSelection()
+        self.viewModel.refresh()
+        # self.viewModel._clearPresetSelection()
 #endregion
 
 
@@ -82,13 +82,13 @@ class EditStructDataCommand(QUndoCommand):
 
     def undo(self):
         self.viewModel.userPresets.replace_preset(self.editedPreset, self.originalPreset)
-        self.viewModel._refreshListView()
-        # self.viewModel._clearListSelection()
+        self.viewModel.refresh()
+        # self.viewModel._clearPresetSelection()
 
     def redo(self):
         self.viewModel.userPresets.replace_preset(self.originalPreset, self.editedPreset)
-        self.viewModel._refreshListView()
-        # self.viewModel._clearListSelection()
+        self.viewModel.refresh()
+        # self.viewModel._clearPresetSelection()
 #endregion
 
 
@@ -102,14 +102,14 @@ class PastePresetCommand(QUndoCommand):
     def undo(self):
         for p in self.presets:
             self.viewModel.userPresets.remove_preset(p)
-        self.viewModel._refreshListView()
-        # self.viewModel._clearListSelection()
+        self.viewModel.refresh()
+        # self.viewModel._clearPresetSelection()
 
     def redo(self):
         for p in self.presets:
             self.viewModel.userPresets.add_preset(p)
-        self.viewModel._refreshListView()
-        # self.viewModel._clearListSelection()
+        self.viewModel.refresh()
+        # self.viewModel._clearPresetSelection()
 #endregion
 
 
@@ -142,8 +142,8 @@ class DeletePresetCommand(QUndoCommand):
                 self.viewModel.userPresets.add_preset(preset, filePath)
             else:
                 self.viewModel.userPresets.add_preset(preset, filePath)
-        self.viewModel._refreshListView()
-        self.viewModel._clearListSelection()
+        self.viewModel.refresh()
+        self.viewModel._clearPresetSelection()
 
     def redo(self):
         for preset, filePath in zip(self.presets, self.filePaths):
@@ -153,8 +153,8 @@ class DeletePresetCommand(QUndoCommand):
                 except Exception as ex:
                     print(f'FIle deletion failed for {filePath}: {ex}')
             self.viewModel.userPresets.remove_preset(preset)
-        self.viewModel._refreshListView()
-        self.viewModel._clearListSelection()
+        self.viewModel.refresh()
+        self.viewModel._clearPresetSelection()
 
     def __del__(self):
         try:

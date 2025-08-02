@@ -2,14 +2,13 @@
 
 from functools import partial
 from pathlib import Path
-from collections import defaultdict
 import yaml
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QItemSelectionModel, QModelIndex
 from PySide6.QtGui import QShortcut, QUndoStack, QKeySequence
-from PySide6.QtWidgets import QFileDialog, QListWidgetItem
+from PySide6.QtWidgets import QFileDialog
 
-from qfluentwidgets import Action, RoundMenu, MenuAnimationType, ListWidget, CommandBar, InfoBar
+from qfluentwidgets import Action, RoundMenu, MenuAnimationType, TableView, CommandBar, InfoBar
 from qfluentwidgets import FluentIcon as FIF
 
 # App/Common
@@ -31,8 +30,8 @@ from App.Extensions.Dialogs.EditBankDialog import EditBankDialog
 
 class BanksViewModel(object):
     #region Initialization
-    def initPage(self, listView: ListWidget, commandBar: CommandBar, parentPage):
-        self.listView = listView
+    def initPage(self, tableWidget: TableView, commandBar: CommandBar, parentPage):
+        self.tableWidget = tableWidget
         self.commandBar = commandBar
         self.page = parentPage
 
@@ -42,7 +41,7 @@ class BanksViewModel(object):
 
         self.bankObject = None
 
-        self.selectedItems: list[QListWidgetItem] = []
+        self.selectedItems = []
         self.selectedPresets: list[Audiobank] = []
         self.copiedPresets: list[Audiobank] = []
         self.editedPresets = set()
@@ -59,9 +58,8 @@ class BanksViewModel(object):
         # Signals
         self._connectSignals()
 
-        # Load user banks and refresh list
-        # self._loadAllPresets()
-        self._refreshListView()
+        # Refresh presets
+        self.refresh()
 
     def _setupCommandBarActions(self):
         self.createBank = Action(icon=FICO.ADD, text='Create', triggered=self._showNewPresetMenu)
@@ -148,8 +146,9 @@ class BanksViewModel(object):
         self.undoStack.canUndoChanged.connect(self.undoAction.setEnabled)
         self.undoStack.canRedoChanged.connect(self.redoAction.setEnabled)
 
-        self.listView.itemSelectionChanged.connect(self._onSelectionChanged)
-        self.listView.customContextMenuRequested.connect(self._onListContextMenu)
+        self.tableWidget.selectionModel().selectionChanged.connect(self._onTableSelectionChanged)
+        self.tableWidget.horizontalHeader().sortIndicatorChanged.connect(self._onSortChanged)
+        self.tableWidget.customContextMenuRequested.connect(self._onPresetContextMenu)
 
     def _setupPageShortcuts(self):
         shortcut_map = {
@@ -165,7 +164,7 @@ class BanksViewModel(object):
             'Ctrl+B': self._onCompilePreset,
             'Ctrl+Z': self.undoStack.undo,
             'Ctrl+Y': self.undoStack.redo,
-            'Ctrl+D': self._clearListSelection,
+            'Ctrl+D': self._clearPresetSelection,
             'Del': self._onDeletePreset,
         }
 
@@ -175,22 +174,38 @@ class BanksViewModel(object):
     #endregion
 
     #region List Handling
-    def _clearListSelection(self):
+    def _clearPresetSelection(self):
         self.bankObject = None
         self.selectedItem = None
 
         self.selectedItems = []
         self.selectedPresets = []
 
-        self.listView.clearSelection()
-        self.listView.setCurrentItem(None)
-        self.listView.clearFocus()
+        self.tableWidget.clearSelection()
+        self.tableWidget.setCurrentIndex(QModelIndex())
 
-    def _onSelectionChanged(self):
-        self.selectedItems = self.listView.selectedItems()
-        self.selectedPresets = [item.data(Qt.ItemDataRole.UserRole) for item in self.selectedItems]
+    def _onTableSelectionChanged(self):
+        selectionModel = self.tableWidget.selectionModel()
+        selectedIndices = selectionModel.selectedRows()
+
+        self.selectedItems = []
+        self.selectedPresets = []
+
+        for index in selectedIndices:
+            sourceIndex = self.page.tableProxy.mapToSource(index)
+            preset = self.page.tableModel.presets[sourceIndex.row()]
+
+            if preset:
+                self.selectedItems.append(sourceIndex)
+                self.selectedPresets.append(preset)
 
         self._updateCommandBarButtonState()
+
+    def _onSortChanged(self, column: int, order: Qt.SortOrder):
+        self.sortColumn = column
+        self.sortOrder = order
+
+        self._clearPresetSelection()
 
     def _updateCommandBarButtonState(self):
         selectedCount: int = len(self.selectedItems)
@@ -215,37 +230,12 @@ class BanksViewModel(object):
         self.builtinPresets.load_builtin_presets()
         self.userPresets.load_user_presets(Path(cfg.get(cfg.presetsfolder)))
 
-    # def _refreshListView(self):
-    #     # Not implemented
-    #     return
-    def _refreshListView(self):
-        self.listView.clear()
+    def _refreshTableWidget(self):
+        presetList = list(self._getPresetList())
+        presetList.sort(key=lambda p: (p.game, p.name))
 
-        presetList = self._getPresetList()
-        name_counts = defaultdict(int)
-
-        for obj in presetList:
-            name_counts[obj.name] += 1
-
-        for obj in presetList:
-            displayName = obj.name
-            if name_counts[obj.name] > 1:
-                path = self.userPresets.get_path(obj)
-                if path:
-                    import os
-                    filename = os.path.basename(path)
-                    displayName = f'{obj.name} ({filename})'
-                else:
-                    displayName = f'{obj.name}'
-
-            item = QListWidgetItem(displayName)
-            item.setData(Qt.ItemDataRole.UserRole, obj)
-
-            if id(obj) in self.editedPresets:
-                # item.setIcon(make_dot_icon())
-                pass
-
-            self.listView.addItem(item)
+        self.page.tableModel.updatePresets(presetList)
+        self.page.tableWidget.clearSelection()
 
     def _getPresetList(self):
         return self.userPresets.banks.values()
@@ -264,15 +254,23 @@ class BanksViewModel(object):
 
             cmd = CreatePresetCommand(self, newPreset)
             self.undoStack.push(cmd)
-            self._clearListSelection()
+            self._clearPresetSelection()
 
             # Select newly created item
-            for i in range(self.listView.count()):
-                item = self.listView.item(i)
-                if item.data(Qt.ItemDataRole.UserRole) == newPreset:
-                    item.setSelected(True)
-                    self.listView.setCurrentItem(item)
+            row_to_select = -1
+            for row, preset in enumerate(self.page.tableModel.presets):
+                if preset == newPreset:
+                    row_to_select = row
                     break
+
+            if row_to_select >= 0:
+                index = self.page.tableModel.index(row_to_select, 1)
+                proxy_index = self.page.tableProxy.mapFromSource(index)
+                self.tableWidget.selectionModel().select(
+                    proxy_index,
+                    QItemSelectionModel.SelectionFlag.Select | QItemSelectionModel.SelectionFlag.Rows
+                )
+                self.tableWidget.setCurrentIndex(proxy_index)
 
     def _onExportPreset(self):
         if not self.selectedItems and not self.selectedPresets:
@@ -339,7 +337,7 @@ class BanksViewModel(object):
             f'Delete {len(self.selectedPresets)} instrument banks'
         )
         self.undoStack.push(cmd)
-        self._clearListSelection()
+        self._clearPresetSelection()
 
     def _onCopyPreset(self):
         if not self.selectedItems and not self.selectedPresets:
@@ -350,10 +348,7 @@ class BanksViewModel(object):
         if not self.copiedPresets:
             return
 
-        existingNames = {
-            self.listView.item(i).text()
-            for i in range(self.listView.count())
-        }
+        existingNames = {p.name for p in self.page.tableModel.presets}
 
         pastedPresets = []
         for presetCopy in self.copiedPresets:
@@ -374,16 +369,14 @@ class BanksViewModel(object):
     #endregion
 
     #region Menus
-    def _onListContextMenu(self, pos):
-        clickedItem = self.listView.itemAt(pos)
-        if clickedItem and clickedItem not in self.selectedItems:
-            self.listView.setCurrentItem(clickedItem)
+    def _onPresetContextMenu(self, pos):
+        index = self.tableWidget.indexAt(pos)
+        if index.isValid():
+            if not self.tableWidget.selectionModel().isSelected(index):
+                self.tableWidget.clearSelection()
+                self.tableWidget.selectRow(index.row())
 
-        selectedItems = self.selectedItems
-        selectedPresets = self.selectedPresets
-        copiedPresets = self.copiedPresets
-
-        if not selectedItems and not selectedPresets:
+        if not self.selectedPresets:
             return
 
         menu = RoundMenu(parent=self.page)
@@ -402,13 +395,13 @@ class BanksViewModel(object):
 
         # Add actions to menu
         menu.addAction(copyPresetAction)
-        if copiedPresets:
+        if self.copiedPresets:
             menu.addAction(pastePresetAction)
-        if len(selectedPresets) == 1:
+        if len(self.selectedPresets) == 1:
             menu.addAction(exportPresetAction)
         menu.addAction(deletePresetAction)
 
-        globalPos = self.listView.mapToGlobal(pos)
+        globalPos = self.tableWidget.viewport().mapToGlobal(pos)
         menu.exec(globalPos, True, MenuAnimationType.DROP_DOWN)
 
     def _showNewPresetMenu(self):
@@ -499,7 +492,7 @@ class BanksViewModel(object):
                 )
                 self.undoStack.push(cmd)
 
-            # self._clearListSelection()
+            # self._clearPresetSelection()
 
     def _getCombinedPresets(self, listType: str):
         from App.Common.Addresses import AUDIO_SAMPLE_ADDRESSES
@@ -560,3 +553,6 @@ class BanksViewModel(object):
 
     def onThemeChanged(self):
         self._updateCommandBarButtonState()
+
+    def refresh(self):
+        self._refreshTableWidget()

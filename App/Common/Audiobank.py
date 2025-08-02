@@ -1,6 +1,6 @@
 # App/Common/Audiobank.py
 
-import os
+from pathlib import Path
 from dataclasses import dataclass, field
 import struct
 
@@ -332,12 +332,14 @@ class Audiobank:
                         raise TypeError()
 
             # Write out the binary file
-            bankFolder = os.path.join(outFolder, self.name)
-            bankmetaPath = os.path.join(bankFolder, f'{self.name}.bankmeta')
-            bankPath = os.path.join(bankFolder, f'{self.name}.zbank')
+            # Output folder
+            outFolder = Path(outFolder)
+            bankFolder = outFolder / self.game / self.name
+            bankFolder.mkdir(parents=True, exist_ok=True)
 
-            # Create output dir if needed
-            os.makedirs(bankFolder, exist_ok=True)
+            # File paths
+            bankmetaPath = bankFolder / f'{self.name}.bankmeta'
+            bankPath = bankFolder / f'{self.name}.zbank'
 
             tableEntryBytes = self.tableEntry.compile()
             bankBytes = buffer

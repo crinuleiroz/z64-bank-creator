@@ -88,4 +88,4 @@ class StructsPage(QWidget):
 
     def showEvent(self, event):
         super().showEvent(event)
-        self.viewModel._clearListSelection()
+        self.viewModel._clearPresetSelection()
