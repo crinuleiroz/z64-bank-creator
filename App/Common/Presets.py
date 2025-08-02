@@ -153,6 +153,17 @@ class BuiltinPresetStore(PresetStoreBase):
     def load_builtin_presets(self):
         for path in (ENVELOPES_PATHS + SAMPLES_PATHS + INSTRUMENTS_PATHS + DRUMKITS_PATHS + BANKS_PATHS):
             self.load_builtin_yaml(path)
+
+    def get_builtin_preset_list(self, game_id: str, preset_type: str):
+        from App.Common.Helpers import has_valid_address
+
+        builtin_dict = getattr(self, preset_type, {})
+        builtin_list = [
+            p for p in builtin_dict.values()
+            if has_valid_address(p, game_id, preset_type)
+        ]
+
+        return builtin_list
 #endregion
 
 
@@ -200,6 +211,14 @@ class UserPresetStore(PresetStoreBase):
                 self.register(obj, str(file))
             except Exception as ex:
                 print(f"[UserPresetStore] Failed to load {root_key} from {file}: {ex}")
+
+    def get_user_preset_list(self, game_id: str, preset_type: str):
+        from App.Common.Helpers import has_valid_address
+
+        user_dict = getattr(self, preset_type, {})
+        user_list = list(user_dict.values)
+
+        return user_list
 
     def add_preset(self, obj, path=None):
         self.register(obj, path)

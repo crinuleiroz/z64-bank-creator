@@ -23,6 +23,22 @@ def stable_hash(*parts: object, length: int = 32) -> str:
     return digest[:length] if length else digest
 #endregion
 
+#region Sample Retrieval
+def has_valid_address(preset, game_id: str, preset_type: str) -> bool:
+    from App.Common.Addresses import AUDIO_SAMPLE_ADDRESSES
+    from App.Common.Constants import SAMPLE_FIELDS
+
+    sample_fields = SAMPLE_FIELDS.get(preset_type, [])
+    for field in sample_fields:
+        sample_obj = getattr(preset, field, None)
+        if not sample_obj or not sample_obj.sample:
+            continue
+        sample_name = sample_obj.sample.name
+        sample_entry = AUDIO_SAMPLE_ADDRESSES.get(sample_name.upper())
+        if not sample_entry or sample_entry.get(game_id, -1) == -1:
+            return False
+    return True # All samples valid
+#endregion
 
 #region ComboBoxes
 def patch_combo_setCurrentIndex(combo: ComboBox):

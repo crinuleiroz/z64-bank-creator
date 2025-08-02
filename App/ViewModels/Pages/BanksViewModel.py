@@ -474,13 +474,15 @@ class BanksViewModel(object):
                 return
 
             oldList = currentList.copy()
-            presets = self._getCombinedPresets(listType)
+            combinedPresets, builtinPresets, userPresets = self._getCombinedPresets(listType)
 
             dialog = EditBankDialog(
                 mode='bankList',
                 listType=listType,
                 currentList=currentList,
-                presets=presets,
+                combinedPresets=combinedPresets,
+                builtinPresets=builtinPresets,
+                userPresets=userPresets,
                 parent=self.page
             )
 
@@ -499,12 +501,7 @@ class BanksViewModel(object):
 
     def _getCombinedPresets(self, listType: str):
         from App.Common.Addresses import AUDIO_SAMPLE_ADDRESSES
-
-        SAMPLE_FIELDS = {
-            'drums': ['drum_sample'],
-            'effects': ['effect_sample'],
-            'instruments': ['low_sample', 'prim_sample', 'high_sample']
-        }
+        from App.Common.Constants import SAMPLE_FIELDS
 
         def has_valid_address(preset, gameId: str) -> bool:
             sample_fields = SAMPLE_FIELDS.get(listType, [])
@@ -533,7 +530,9 @@ class BanksViewModel(object):
         # Duplicates are allowed for user-defined presets, but builtin presets do not have duplicates
         builtin_names = {p.name for p in builtin_list}
 
-        return builtin_list + [p for p in user_list if p.name not in builtin_names]
+        combined_list = builtin_list + [p for p in user_list if p.name not in builtin_names]
+
+        return combined_list, builtin_list, user_list
     #endregion
 
     #region Tooltips

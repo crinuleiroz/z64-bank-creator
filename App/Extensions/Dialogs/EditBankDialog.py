@@ -8,13 +8,15 @@ from App.Extensions.Forms.BankListEditForm import BankListEditForm
 
 
 class EditBankDialog(MessageBoxBase):
-    def __init__(self, mode: str, bank = None, listType: str = '', currentList: list = None, presets=None, parent=None):
+    def __init__(self, mode: str, bank = None, listType: str = '', currentList: list = None, combinedPresets=None, builtinPresets=None, userPresets=None, parent=None):
         super().__init__(parent)
         self.mode = mode
         self.bank = bank
         self.listType = listType
         self.currentList = currentList or []
-        self.presets = presets or []
+        self.combinedPresets = combinedPresets or []
+        self.builtinPresets = builtinPresets or []
+        self.userPresets = userPresets or []
 
         self.titleLabel = SubtitleLabel(self._getTitle(), self)
         self.form = self._getForm()
@@ -44,8 +46,10 @@ class EditBankDialog(MessageBoxBase):
                 return BankListEditForm(
                     count=len(self.currentList),
                     listType=self.listType,
-                    presets=self.presets,
-                    currentList=self.currentList
+                    currentList=self.currentList,
+                    combinedPresets=self.combinedPresets,
+                    builtinPresets=self.builtinPresets,
+                    userPresets=self.userPresets
                 )
 
     def applyChanges(self):
