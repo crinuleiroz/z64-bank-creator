@@ -1,7 +1,7 @@
 # App/Extensions/Forms/EnvelopeArrayEditForm.py
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableWidgetItem, QSizePolicy
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableWidgetItem
 
 from qfluentwidgets import TableWidget, CommandBar, Action, LineEdit
 

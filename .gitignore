@@ -196,6 +196,11 @@ pyrightconfig.json
 /config.json
 
 # Resources
+# Emoji
+/App/Resources/Emoji/*
+!/App/Resources/Emoji/MSFluentEmoji.py
+!/App/Resources/Emoji/.gitkeep
+
 # Icons
 /App/Resources/Icons/*
 !/App/Resources/Icons/MSFluentIcons.py

@@ -387,6 +387,7 @@ ENVELOPES_PATHS = [
 
 OTHER_PATHS = [
     ":/assets/images/clef_icon.png",
+    ":/assets/emoji/msfluent/warning_color.svg",
     ":/assets/icons/msfluent/accessibility_white.svg",
     ":/assets/icons/msfluent/accessibility_black.svg",
     ":/assets/icons/msfluent/accessibility_checkmark_white.svg",

@@ -2,6 +2,9 @@
 
 from PySide6.QtCore import Qt, QAbstractTableModel
 
+# App/Resources
+from App.Resources.Emoji.MSFluentEmoji import MSFluentEmoji as FEMO
+
 
 GAME_TITLES = {
     'OOT': "Ocarina of Time",
@@ -27,13 +30,24 @@ class BankPresetTableModel(QAbstractTableModel):
         preset = self.presets[index.row()]
         col = index.column()
 
-        if role == Qt.ItemDataRole.DisplayRole:
-            if col == 0:
-                return GAME_TITLES.get(preset.game, preset.game)
-            elif col == 1:
-                return preset.name
-        elif role == Qt.ItemDataRole.UserRole:
-            return preset
+        match col:
+            case 0:
+                if role == Qt.ItemDataRole.DisplayRole:
+                    return GAME_TITLES.get(preset.game, 'INVALID GAME')
+                if role == Qt.ItemDataRole.DecorationRole:
+                    if preset.game in GAME_TITLES:
+                        return None
+                    else:
+                        return FEMO.WARNING_COLOR.icon()
+
+            case 1:
+                if role == Qt.ItemDataRole.DisplayRole:
+                    return preset.name
+
+            case _:
+                if role == Qt.ItemDataRole.UserRole:
+                    return preset
+
         return None
 
     def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):

@@ -15,6 +15,7 @@ from App.Common.Enums import AudioStorageMedium, AudioCacheLoadType, SampleBankI
 from App.Common.MemAllocator import MemAllocator
 from App.Common.Addresses import AUDIO_SAMPLE_ADDRESSES
 from App.Common.Helpers import align_to_16
+from App.Common.AppExceptions import InvalidGameException
 
 
 @dataclass
@@ -202,7 +203,7 @@ class Audiobank:
     def compile(self, outFolder):
         try:
             if self.game.upper() not in ['OOT', 'MM']:
-                self.game = 'OOT'
+                return False, InvalidGameException(game=self.game)
 
             # Reference deduplication
             # ———————————————————————————————————————————————————————————————————————————

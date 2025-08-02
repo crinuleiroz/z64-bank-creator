@@ -11,6 +11,9 @@ from PySide6.QtWidgets import QFileDialog
 from qfluentwidgets import Action, RoundMenu, MenuAnimationType, TableView, CommandBar, InfoBar
 from qfluentwidgets import FluentIcon as FIF
 
+# App/Resources
+from App.Resources.Icons.MSFluentIcons import MSFluentIcon as FICO
+
 # App/Common
 from App.Common.Config import cfg
 from App.Common.Presets import builtinPresetStore, userPresetStore, presetRegistry
@@ -19,7 +22,6 @@ from App.Common.Serialization import serialize_to_yaml
 from App.Common.Audiobank import Audiobank
 
 # App/Extensions
-from App.Resources.Icons.MSFluentIcons import MSFluentIcon as FICO
 from App.Extensions.Components.PresetCommands import (
     CreatePresetCommand, EditBankTableEntryCommand, EditBankListCommand,
     PastePresetCommand, DeletePresetCommand
@@ -317,9 +319,10 @@ class BanksViewModel(object):
             success, error = preset.compile(cfg.get(cfg.outputfolder))
 
             if success:
-                successMsgs.append(f'Compiled {preset.name} to: {cfg.outputfolder.value}')
+                outPath = Path(cfg.outputfolder.value) / preset.game / preset.name
+                successMsgs.append(f"Compiled '{preset.name}' to folder: {outPath}")
             else:
-                errorMsgs.append(f'Error compiling {preset.name}: {error}')
+                errorMsgs.append(f"Error compiling '{preset.name}': {error}")
 
         if successMsgs:
             self._showSuccessTooltip('\n'.join(successMsgs))
